@@ -1,10 +1,10 @@
-from ast import parse
 from sklearn.model_selection import train_test_split
 import cv2
-from utils import check_and_retrieveVocabulary, parse_arguments
+from utils import check_and_retrieveVocabulary, parse_arguments_ds
 import os
 import tqdm
 import numpy as np
+import sys
 
 
 def load_data(IMG_PATH, AGNOSTIC_PATH):
@@ -22,10 +22,21 @@ def load_data(IMG_PATH, AGNOSTIC_PATH):
     
     return X, Y
 
+def save_partition(corpus_name,folder, X, Y):
+    path = f"Data/{corpus_name}/{folder}"
+    if not os.path.isdir(f"Data/{corpus_name}/{folder}"):
+        os.makedirs(path)
+
+    for idx, sample in enumerate(X):
+        cv2.imwrite(f"{path}/{idx}.jpg", sample)
+        with open(f"{path}/{idx}.txt", "w+") as wfile:
+            wfile.write(" ".join(Y[idx]))
+
 def main():
-    args = parse_arguments()
+    args = parse_arguments_ds()
     ratio = 0.5
     X, Y = load_data(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
+    _,_ = check_and_retrieveVocabulary(Y, f"./vocab", f"{args.corpus_name}")
 
     for i in range(len(X)):
         #img = (255. - X[i]) / 255.
@@ -34,7 +45,14 @@ def main():
         height = int(np.ceil(img.shape[0] * ratio))
         X[i] = cv2.resize(img, (width, height))
 
-    
+    XTrain, XValTest, YTrain, YValTest = train_test_split(X,Y, test_size=0.3, shuffle=True)
+
+    XVal, XTest, YVal, YTest = train_test_split(XValTest,YValTest, test_size=0.5)
+
+    save_partition(args.corpus_name, "train", XTrain, YTrain)
+    save_partition(args.corpus_name, "val", XVal, YVal)
+    save_partition(args.corpus_name, "test", XTest, YTest)
+
 
 
 if __name__ == "__main__":

@@ -192,7 +192,7 @@ class SPANPage(nn.Module):
 
 def get_span_model(maxwidth, maxheight, in_channels, out_size):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = SPANPage(in_channels=in_channels, out_cats=out_size).to(device)
+    model = SPANPage(in_channels=in_channels, out_cats=out_size+1).to(device)
     summary(model, input_size=[(1,1,maxheight,maxwidth)], dtypes=[torch.float])
     
     return model, device

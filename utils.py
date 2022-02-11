@@ -3,11 +3,20 @@ import numpy as np
 from os import path
 import os
 
-def parse_arguments():
+def parse_arguments_ds():
     parser = argparse.ArgumentParser(description="Program arguments to work")
     parser.add_argument('--corpus_name', type=str, default=None, help="Image folder to load")
     parser.add_argument('--image_folder', type=str, default=None, help="Image folder to load")
     parser.add_argument('--agnostic_folder', type=str, default=None, help="Agnostic folder to load")
+
+    args = parser.parse_args()
+    return args
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Program arguments to work")
+    parser.add_argument('--corpus_name', type=str, default=None, help="Corpus name")
+    parser.add_argument('--model_name', type=str, default=None, help="Model name")
+    parser.add_argument('--data_path', type=str, default=None, help="Image folder to load")
 
     args = parser.parse_args()
     return args
