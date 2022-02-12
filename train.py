@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 def test_model(model, X, Y, i2w, device):
     acc_ed_dist = 0
+    acc_len = 0
 
     randomindex = random.randint(0, len(X)-1)
 
@@ -39,12 +40,11 @@ def test_model(model, X, Y, i2w, device):
               print(f"True - {groundtruth}")
 
           
-          edit_dist = levenshtein(decoded, groundtruth)
-          
-          acc_ed_dist += edit_dist / len(groundtruth)
+          acc_ed_dist += levenshtein(decoded, groundtruth)
+          acc_len += len(groundtruth)
 
 
-      ser = 100.*acc_ed_dist / len(X)
+    ser = 100.*acc_ed_dist / acc_len
     
     return ser
 
