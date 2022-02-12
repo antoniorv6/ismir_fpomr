@@ -14,8 +14,12 @@ def load_data_muret(IMG_PATH, JSON_PATH):
         for file in os.listdir(f"{JSON_PATH}/{folder}"):
             with open(f"{JSON_PATH}/{folder}/{file}") as jsonfile:
                 data = json.load(jsonfile)
-                print(data)
-                sys.exit(0)
+                image = cv2.imread(f"{IMG_PATH}/{folder}/masters/{data['filename']}", 0)
+                bbox = data["pages"][0]['bounding_box']
+                image = image[bbox["fromY"]:bbox["toY"], bbox["fromX"]:bbox["toX"]]
+                X.append(image)
+                Y.append(data)
+    return X, Y
 
 def load_data(IMG_PATH, AGNOSTIC_PATH):
     X= []
@@ -42,6 +46,17 @@ def save_partition(corpus_name,folder, X, Y):
         with open(f"{path}/{idx}.txt", "w+") as wfile:
             wfile.write(" ".join(Y[idx]))
 
+def save_partition_json(corpus_name,folder, X, Y):
+    path = f"Data/{corpus_name}/{folder}"
+    if not os.path.isdir(f"Data/{corpus_name}/{folder}"):
+        os.makedirs(path)
+
+    for idx, sample in enumerate(X):
+        filename = Y[idx]["filename"]
+        cv2.imwrite(f"{path}/{filename}", sample)
+        with open(f"{path}/{filename}.json", "w+") as wfile:
+            json.dump(Y[idx], wfile)
+
 def main():
     args = parse_arguments_ds()
     ratio = 0.5
@@ -59,9 +74,9 @@ def main():
 
     XVal, XTest, YVal, YTest = train_test_split(XValTest,YValTest, test_size=0.5)
 
-    save_partition(args.corpus_name, "train", XTrain, YTrain)
-    save_partition(args.corpus_name, "val", XVal, YVal)
-    save_partition(args.corpus_name, "test", XTest, YTest)
+    save_partition_json(args.corpus_name, "train", XTrain, YTrain)
+    save_partition_json(args.corpus_name, "val", XVal, YVal)
+    save_partition_json(args.corpus_name, "test", XTest, YTest)
 
 
 

@@ -118,7 +118,7 @@ def main():
     maxheight = max([img.shape[0] for img in XTrain])
     model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
     batch_gen = batch_generator(XTrain, YTrain, args.batch_size, synth_prop=0.5)
-    criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
+    criterion = torch.nn.CTCLoss(blank=0).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     print(f"Training with {len(XTrain)} samples")
@@ -130,6 +130,9 @@ def main():
         for mini_epoch in range(10):
             accum_loss = 0
             for _ in range(len(XTrain)//args.batch_size):
+                
+                optimizer.zero_grad()
+                
                 net_input, net_tar, input_len, tar_len = next(batch_gen)
                 predictions = model(net_input.to(device))
                 
@@ -140,14 +143,12 @@ def main():
 
                 loss = criterion(predictions, net_tar.to(device), input_len.to(device), tar_len.to(device))
 
-                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
                 accum_loss += loss.item()
             
-            epoch_loss = accum_loss / (len(XTrain)//args.batch_size)
-            print(f"Step {mini_epoch + 1} / 10 - Loss: {epoch_loss}")
+            print(f"Step {mini_epoch + 1} / 10 - Loss: {accum_loss}")
 
         model.eval()
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
