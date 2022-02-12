@@ -129,7 +129,7 @@ def main():
         model.train()
         for mini_epoch in range(10):
             accum_loss = 0
-            for _ in tqdm(range(len(XTrain)//args.batch_size)):
+            for _ in range(len(XTrain)//args.batch_size):
                 net_input, net_tar, input_len, tar_len = next(batch_gen)
                 predictions = model(net_input.to(device))
                 
