@@ -7,6 +7,7 @@ import torch.optim as optim
 from utils import levenshtein
 from itertools import groupby
 import random
+from tqdm import tqdm
 
 def test_model(model, X, Y, i2w, device):
     acc_ed_dist = 0
@@ -120,11 +121,15 @@ def main():
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
+    print(f"Training with {len(XTrain)} samples")
+    print(f"Validating with {len(XVal)} samples")
+    print(f"Testing with {len(XTest)} samples")
+
     for epoch in range(5000):
         model.train()
-        for mini_epoch in range(5):
+        for mini_epoch in range(10):
             accum_loss = 0
-            for _ in range(len(XTrain)//args.batch_size):
+            for _ in tqdm(range(len(XTrain)//args.batch_size)):
                 net_input, net_tar, input_len, tar_len = next(batch_gen)
                 predictions = model(net_input.to(device))
                 
