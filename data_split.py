@@ -5,7 +5,17 @@ import os
 import tqdm
 import numpy as np
 import sys
+import json
 
+def load_data_muret(IMG_PATH, JSON_PATH):
+    X = []
+    Y = []
+    for folder in tqdm.tqdm(os.listdir(JSON_PATH)):
+        for file in os.listdir(f"{JSON_PATH}/{folder}"):
+            with open(f"{JSON_PATH}/{folder}/{file}") as jsonfile:
+                data = json.load(jsonfile)
+                print(data)
+                sys.exit(0)
 
 def load_data(IMG_PATH, AGNOSTIC_PATH):
     X= []
@@ -35,7 +45,7 @@ def save_partition(corpus_name,folder, X, Y):
 def main():
     args = parse_arguments_ds()
     ratio = 0.5
-    X, Y = load_data(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
+    X, Y = load_data_muret(IMG_PATH=args.image_folder, JSON_PATH=args.agnostic_folder)
     _,_ = check_and_retrieveVocabulary(Y, f"./vocab", f"{args.corpus_name}")
 
     for i in range(len(X)):

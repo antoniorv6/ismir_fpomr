@@ -147,7 +147,7 @@ def main():
                 accum_loss += loss.item()
             
             epoch_loss = accum_loss / (len(XTrain)//args.batch_size)
-            print(f"Epoch {mini_epoch + 1} - Loss: {epoch_loss}")
+            print(f"Step {mini_epoch + 1} / 10 - Loss: {epoch_loss}")
 
         model.eval()
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
