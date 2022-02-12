@@ -116,7 +116,7 @@ def main():
     maxwidth = max([img.shape[1] for img in XTrain])
     maxheight = max([img.shape[0] for img in XTrain])
     model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
-    batch_gen = batch_generator(XTrain, YTrain, synth_prop=0.5)
+    batch_gen = batch_generator(XTrain, YTrain, args.batch_size, synth_prop=0.5)
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
