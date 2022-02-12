@@ -29,7 +29,7 @@ def test_model(model, X, Y, i2w, device):
           out_best = [k for k, g in groupby(list(out_best))]
           decoded = []
           for c in out_best:
-              if c < len(i2w):  # CTC Blank must be ignored
+              if c > 0:  # CTC Blank must be ignored
                   decoded.append(i2w[c.item()])
 
           groundtruth = [i2w[label] for label in Y[i]]
