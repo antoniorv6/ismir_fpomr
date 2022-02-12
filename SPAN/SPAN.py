@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import torch
 import random
 from torchinfo import summary
+from torch.nn.init import zeros_, ones_, kaiming_uniform_
 
 class DepthSepConv2D(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, activation=None, padding=True, stride=(1,1), dilation=(1,1)):
@@ -188,11 +189,28 @@ class SPANPage(nn.Module):
         x = self.encoder(inputs)
         x = self.decoder(x)
         return x
+    
+
+def SPAN_Weight_Init(m):
+    """
+    Weights initialization for model training from scratch
+    """
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+        if m.weight is not None:
+            kaiming_uniform_(m.weight, nonlinearity="relu")
+        if m.bias is not None:
+            zeros_(m.bias)
+    elif isinstance(m, nn.InstanceNorm2d):
+        if m.weight is not None:
+            ones_(m.weight)
+        if m.bias is not None:
+            zeros_(m.bias)
 
 
 def get_span_model(maxwidth, maxheight, in_channels, out_size):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SPANPage(in_channels=in_channels, out_cats=out_size).to(device)
+    model.apply(SPAN_Weight_Init)
     summary(model, input_size=[(1,1,maxheight,maxwidth)], dtypes=[torch.float])
     
     return model, device
