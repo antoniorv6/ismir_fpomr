@@ -8,6 +8,7 @@ from utils import levenshtein
 from itertools import groupby
 import random
 from tqdm import tqdm
+import cv2
 
 def test_model(model, X, Y, i2w, device):
     acc_ed_dist = 0
@@ -90,8 +91,13 @@ def main():
 
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}", modeltype='torch')
     
+    ratio = 150/300
+
     for i in range(len(XTrain)):
-        XTrain[i] = (255. - XTrain[i]) / 255.
+        img = (255. - XTrain[i]) / 255.
+        width = int(np.ceil(img.shape[1] * ratio))
+        height = int(np.ceil(img.shape[0] * ratio))
+        XTrain[i] = cv2.resize(img, (width, height))
         seq = []
         for symbol in YTrain[i]:
             seq.append(w2i[symbol])
@@ -99,7 +105,10 @@ def main():
         YTrain[i] = seq
     
     for i in range(len(XVal)):
-        XVal[i] = (255. - XVal[i]) / 255.
+        img = (255. - XVal[i]) / 255.
+        width = int(np.ceil(img.shape[1] * ratio))
+        height = int(np.ceil(img.shape[0] * ratio))
+        XVal[i] = cv2.resize(img, (width, height))
         seq = []
         for symbol in YVal[i]:
             seq.append(w2i[symbol])
@@ -107,7 +116,10 @@ def main():
         YVal[i] = seq
     
     for i in range(len(XTest)):
-        XTest[i] = (255. - XTest[i]) / 255.
+        img = (255. - XTest[i]) / 255.
+        width = int(np.ceil(img.shape[1] * ratio))
+        height = int(np.ceil(img.shape[0] * ratio))
+        XTest[i] = cv2.resize(img, (width, height))
         seq = []
         for symbol in YTest[i]:
             seq.append(w2i[symbol])

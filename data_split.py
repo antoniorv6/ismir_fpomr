@@ -42,7 +42,7 @@ def save_partition(corpus_name,folder, X, Y):
         os.makedirs(path)
 
     for idx, sample in enumerate(X):
-        cv2.imwrite(f"{path}/{idx}.jpg", sample)
+        cv2.imwrite(f"{path}/{idx}.png", sample)
         with open(f"{path}/{idx}.txt", "w+") as wfile:
             wfile.write(" ".join(Y[idx]))
 
@@ -60,14 +60,7 @@ def save_partition_json(corpus_name,folder, X, Y):
 def main():
     args = parse_arguments_ds()
     ratio = 0.5
-    X, Y = load_data_muret(IMG_PATH=args.image_folder, JSON_PATH=args.agnostic_folder)
-
-    for i in range(len(X)):
-        #img = (255. - X[i]) / 255.
-        img = X[i]
-        width = int(np.ceil(img.shape[1] * ratio))
-        height = int(np.ceil(img.shape[0] * ratio))
-        X[i] = cv2.resize(img, (width, height))
+    X, Y = load_data(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
 
     XTrain, XValTest, YTrain, YValTest = train_test_split(X,Y, test_size=0.3, shuffle=True)
 
