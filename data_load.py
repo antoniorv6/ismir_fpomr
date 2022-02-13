@@ -9,7 +9,7 @@ def load_data_testcase(PATH):
         sample = file.split(".")[0]
         format = file.split(".")[1]
         if format == "jpg":
-            X.append(cv2.imread(f"{PATH}{sample}.jpg", 0))
+            X.append(cv2.imread(f"{PATH}{sample}.png", 0))
             with open(f"{PATH}{sample}.txt", "r") as agnosticfile:
                 string_array = agnosticfile.readline().split(" ")
                 for idx, token in enumerate(string_array):
