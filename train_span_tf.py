@@ -1,9 +1,7 @@
 from utils import parse_arguments, check_and_retrieveVocabulary
 from SPAN_TF.SPAN_MODEL import get_span_model
-import torch
 from data_load import load_data_testcase
 import numpy as np
-import torch.optim as optim
 from utils import levenshtein
 from itertools import groupby
 import random
