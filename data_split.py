@@ -61,7 +61,6 @@ def main():
     args = parse_arguments_ds()
     ratio = 0.5
     X, Y = load_data_muret(IMG_PATH=args.image_folder, JSON_PATH=args.agnostic_folder)
-    _,_ = check_and_retrieveVocabulary(Y, f"./vocab", f"{args.corpus_name}")
 
     for i in range(len(X)):
         #img = (255. - X[i]) / 255.
