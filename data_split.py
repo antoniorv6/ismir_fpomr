@@ -66,9 +66,9 @@ def main():
 
     XVal, XTest, YVal, YTest = train_test_split(XValTest,YValTest, test_size=0.5)
 
-    save_partition_json(args.corpus_name, "train", XTrain, YTrain)
-    save_partition_json(args.corpus_name, "val", XVal, YVal)
-    save_partition_json(args.corpus_name, "test", XTest, YTest)
+    save_partition(args.corpus_name, "train", XTrain, YTrain)
+    save_partition(args.corpus_name, "val", XVal, YVal)
+    save_partition(args.corpus_name, "test", XTest, YTest)
 
 
 
