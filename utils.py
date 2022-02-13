@@ -52,10 +52,8 @@ def make_vocabulary(YSequences, pathToSave, nameOfVoc):
     w2i = {symbol:idx+2 for idx,symbol in enumerate(vocabulary)}
     i2w = {idx+2:symbol for idx,symbol in enumerate(vocabulary)}
     
-    w2i['<blank>'] = 0
-    i2w[0] = '<blank>'
-    w2i['<pad>'] = 1
-    i2w[1] = '<pad>'
+    w2i['<pad>'] = 0
+    i2w[0] = '<pad>'
 
     #Save the vocabulary
     np.save(pathToSave + "/" + nameOfVoc + "w2i.npy", w2i)
