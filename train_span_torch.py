@@ -87,6 +87,8 @@ def batch_generator(X,Y, BATCH_SIZE):
 
 def augmentation_process(X):
 
+    X = np.array(X)
+
     if np.random.rand() < 0.2:
         scale = np.random.uniform(0.75, 1)
         X = DPIAdjusting(X, scale)
