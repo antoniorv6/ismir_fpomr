@@ -182,6 +182,8 @@ def main():
     numsamples = len(XTrain)//args.batch_size
     #numsamples = 1000
 
+    bestSer = 10.000
+
     for epoch in range(5000):
         model.train()
         running_avg = 0
@@ -214,6 +216,14 @@ def main():
         model.eval()
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
         SER_TEST = test_model(model, XTest, YTest, i2w, device)
+
+        if bestSer < SER_VAL:
+            print("Validation SER improved - Saving weights")
+            torch.save(model.state_dict(), f"models/weights/{args.model_name}.pth")
+            torch.save(optimizer.state_dict(), f"models/optimizers/{args.model_name}.pth")
+            bestSer = SER_VAL
+
+
         print(f"EPOCH {epoch + 1} --- VAL SER {SER_VAL} | TEST SER {SER_TEST}")
 
         
