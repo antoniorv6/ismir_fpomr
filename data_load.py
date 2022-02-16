@@ -38,8 +38,9 @@ def load_data_jsonMuret(PATH):
                         if "symbols" in region: # Avoid empty staves
                             for symbol in region["symbols"]:
                                 sequence.append(f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}")
-                X.append(image)
-                Y.append(sequence)
+                if sequence:
+                    X.append(image)
+                    Y.append(sequence)
                 
     return X, Y
 
