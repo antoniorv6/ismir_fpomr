@@ -15,8 +15,15 @@ def load_data_muret(IMG_PATH, AGNOSTIC_PATH):
             with open(f"{AGNOSTIC_PATH}/{folder}/{file}") as jsonfile:
                 data = json.load(jsonfile)
                 image = cv2.imread(f"{IMG_PATH}/{folder}/masters/{data['filename']}")
-                X.append(image)
-                Y.append(data)
+                sequence = []
+                for region in data["pages"][0]["regions"]:
+                    if region["type"] == "staff":
+                        if "symbols" in region: # Avoid empty staves
+                            for symbol in region["symbols"]:
+                                sequence.append(f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}")
+                if sequence:
+                    X.append(image)
+                    Y.append(sequence)
     return X, Y
 
 def load_data(IMG_PATH, AGNOSTIC_PATH):

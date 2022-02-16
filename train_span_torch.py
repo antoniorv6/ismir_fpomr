@@ -89,9 +89,9 @@ def augmentation_process(X):
 
     X = X[0]
 
-    #if np.random.rand() < 0.2:
-    #    scale = np.random.uniform(0.75, 1)
-    #    X = DPIAdjusting(X, scale)
+    if np.random.rand() < 0.2:
+        scale = np.random.uniform(0.75, 1)
+        X = DPIAdjusting(X, scale)
     
     if np.random.rand() < 0.2:
         kernel_size = np.random.randint(1, 3)
@@ -103,16 +103,16 @@ def augmentation_process(X):
         iterations = 1
         X = Erosion(X, kernel_size, iterations)
     
-    #if np.random.rand() < 0.2:
-    #    brightness_factor = np.random.uniform(0.01, 1)
-    #    X = Brightness(X, brightness_factor)
-    #
-    #if np.random.rand() < 0.2:
-    #    contrast_factor = np.random.uniform(0.01, 1)
-    #    X = Contrast(X, contrast_factor)
-    #
-    #if np.random.rand() < 0.2:
-    #    X = SignFlipping(X, contrast_factor)
+    if np.random.rand() < 0.2:
+        brightness_factor = np.random.uniform(0.01, 1)
+        X = Brightness(X, brightness_factor)
+    
+    if np.random.rand() < 0.2:
+        contrast_factor = np.random.uniform(0.01, 1)
+        X = Contrast(X, contrast_factor)
+    
+    if np.random.rand() < 0.2:
+        X = SignFlipping(X, contrast_factor)
 
     return [X]
 
@@ -214,8 +214,8 @@ def main():
     model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
     
     #batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
-    batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
-    #batch_gen = batch_synth_generator(w2i)
+    #batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
+    batch_gen = batch_synth_generator(w2i)
     
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
