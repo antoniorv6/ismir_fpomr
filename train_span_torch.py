@@ -1,3 +1,4 @@
+from augmentations import Brightness, Contrast, DPIAdjusting, Dilation, Erosion, SignFlipping
 from utils import parse_arguments, check_and_retrieveVocabulary
 from SPAN_Torch.SPAN import get_span_model
 import torch
@@ -74,11 +75,57 @@ def data_preparation_CTC(X, Y):
     return torch.tensor(X_train), torch.tensor(Y_train, dtype=torch.long), torch.tensor(L_train, dtype=torch.long), torch.tensor(T_train, dtype=torch.long)
 
 
-def batch_generator(X,Y, BATCH_SIZE, synth_prop=0.3):
+def batch_generator(X,Y, BATCH_SIZE):
     idx = 0
     while True:
         BatchX = X[idx:idx+BATCH_SIZE]
         BatchY = Y[idx:idx+BATCH_SIZE]
+
+        yield data_preparation_CTC(BatchX, BatchY)
+
+        idx = (idx + BATCH_SIZE) % len(X)
+
+def augmentation_process(X):
+
+    if np.random.rand() < 0.2:
+        scale = np.random.uniform(0.75, 1)
+        X = DPIAdjusting(X, scale)
+    
+    if np.random.rand() < 0.2:
+        kernel_size = np.random.randint(1, 3)
+        iterations = 1
+        X = Dilation(X, kernel_size, iterations)
+    
+    if np.random.rand() < 0.2:
+        kernel_size = np.random.randint(1, 3)
+        iterations = 1
+        X = Erosion(X, kernel_size, iterations)
+    
+    if np.random.rand() < 0.2:
+        kernel_size = np.random.randint(1, 3)
+        iterations = 1
+        X = Erosion(X, kernel_size, iterations)
+    
+    if np.random.rand() < 0.2:
+        brightness_factor = np.random.uniform(0.01, 1)
+        X = Brightness(X, brightness_factor)
+    
+    if np.random.rand() < 0.2:
+        contrast_factor = np.random.uniform(0.01, 1)
+        X = Contrast(X, contrast_factor)
+    
+    if np.random.rand() < 0.2:
+        X = SignFlipping(X, contrast_factor)
+
+    return X
+
+def batch_generator_aug(X,Y, BATCH_SIZE):
+    idx = 0
+    while True:
+        BatchX = X[idx:idx+BATCH_SIZE]
+        BatchY = Y[idx:idx+BATCH_SIZE]
+
+        BatchX = augmentation_process(BatchX)
 
         yield data_preparation_CTC(BatchX, BatchY)
 
@@ -169,7 +216,8 @@ def main():
     print(maxheight)
     model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
     
-    batch_gen = batch_generator(XTrain, YTrain, args.batch_size, synth_prop=0.5)
+    #batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
+    batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
     #batch_gen = batch_synth_generator(w2i)
     
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
@@ -182,7 +230,7 @@ def main():
     numsamples = len(XTrain)//args.batch_size
     #numsamples = 1000
 
-    bestSer = 10.000
+    bestSer = 10000
 
     for epoch in range(5000):
         model.train()
@@ -217,7 +265,7 @@ def main():
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
         SER_TEST = test_model(model, XTest, YTest, i2w, device)
 
-        if bestSer < SER_VAL:
+        if SER_VAL < bestSer:
             print("Validation SER improved - Saving weights")
             torch.save(model.state_dict(), f"models/weights/{args.model_name}.pth")
             torch.save(optimizer.state_dict(), f"models/optimizers/{args.model_name}.pth")
