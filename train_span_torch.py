@@ -169,8 +169,8 @@ def main():
     print(maxheight)
     model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
     
-    #batch_gen = batch_generator(XTrain, YTrain, args.batch_size, synth_prop=0.5)
-    batch_gen = batch_synth_generator(w2i)
+    batch_gen = batch_generator(XTrain, YTrain, args.batch_size, synth_prop=0.5)
+    #batch_gen = batch_synth_generator(w2i)
     
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
@@ -180,7 +180,7 @@ def main():
     print(f"Testing with {len(XTest)} samples")
 
     numsamples = len(XTrain)//args.batch_size
-    numsamples = 1000
+    #numsamples = 1000
 
     for epoch in range(5000):
         model.train()
