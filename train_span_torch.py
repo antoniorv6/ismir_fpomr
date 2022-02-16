@@ -156,18 +156,18 @@ def main():
 
     if args.corpus_name == "ToyPrimus" or args.corpus_name == "FP-Primus":
         print("Loading train set:")
-        XTrain, YTrain = load_data_testcase(PATH=f"{args.data_path}/train/")
+        XTrain, YTrain = load_data_testcase(PATH=f"{args.data_path}/train")
         print("Loading val set:")
-        XVal, YVal = load_data_testcase(PATH=f"{args.data_path}/val/")
+        XVal, YVal = load_data_testcase(PATH=f"{args.data_path}/val")
         print("Loading test set:")
-        XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test/")
+        XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test")
     else:
         print("Loading MuRet train set:")
-        XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train/")
+        XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train")
         print("Loading MuRet val set:")
-        XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val/")
+        XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val")
         print("Loading MuRet test set:")
-        XTest, YTest = load_data_jsonMuret(PATH=f"{args.data_path}/test/")
+        XTest, YTest = load_data_jsonMuret(PATH=f"{args.data_path}/test")
 
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
