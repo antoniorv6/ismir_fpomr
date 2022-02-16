@@ -3,6 +3,7 @@ import os
 import cv2
 import json
 import sys
+import os
 
 def load_data_testcase(PATH):
     X= []
@@ -41,6 +42,9 @@ def load_data_jsonMuret(PATH):
                 if sequence:
                     X.append(image)
                     Y.append(sequence)
+                else:
+                    os.remove(f"{PATH}/{file}")
+                    os.remove(f"{PATH}/{data['filename']}")
                 
     return X, Y
 
