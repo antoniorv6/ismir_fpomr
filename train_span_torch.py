@@ -103,21 +103,16 @@ def augmentation_process(X):
         iterations = 1
         X = Erosion(X, kernel_size, iterations)
     
-    if np.random.rand() < 0.2:
-        kernel_size = np.random.randint(1, 3)
-        iterations = 1
-        X = Erosion(X, kernel_size, iterations)
-    
-    if np.random.rand() < 0.2:
-        brightness_factor = np.random.uniform(0.01, 1)
-        X = Brightness(X, brightness_factor)
-    
-    if np.random.rand() < 0.2:
-        contrast_factor = np.random.uniform(0.01, 1)
-        X = Contrast(X, contrast_factor)
-    
-    if np.random.rand() < 0.2:
-        X = SignFlipping(X, contrast_factor)
+    #if np.random.rand() < 0.2:
+    #    brightness_factor = np.random.uniform(0.01, 1)
+    #    X = Brightness(X, brightness_factor)
+    #
+    #if np.random.rand() < 0.2:
+    #    contrast_factor = np.random.uniform(0.01, 1)
+    #    X = Contrast(X, contrast_factor)
+    #
+    #if np.random.rand() < 0.2:
+    #    X = SignFlipping(X, contrast_factor)
 
     return [X]
 
