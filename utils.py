@@ -24,13 +24,9 @@ def parse_arguments():
     return args
     
 
-def check_and_retrieveVocabulary(YSequences, pathOfSequences, nameOfVoc, modeltype='tf'):
-    if modeltype == 'tf':
-        w2ipath = pathOfSequences + "/" + nameOfVoc + "w2i.npy"
-        i2wpath = pathOfSequences + "/" + nameOfVoc + "i2w.npy"
-    else:
-        w2ipath = pathOfSequences + "/" + nameOfVoc + "w2i_torch_ctc.npy"
-        i2wpath = pathOfSequences + "/" + nameOfVoc + "i2w_torch_ctc.npy"
+def check_and_retrieveVocabulary(YSequences, pathOfSequences, nameOfVoc):
+    w2ipath = pathOfSequences + "/" + nameOfVoc + "w2i.npy"
+    i2wpath = pathOfSequences + "/" + nameOfVoc + "i2w.npy"
 
     w2i = []
     i2w = []
@@ -42,14 +38,11 @@ def check_and_retrieveVocabulary(YSequences, pathOfSequences, nameOfVoc, modelty
         w2i = np.load(w2ipath, allow_pickle=True).item()
         i2w = np.load(i2wpath, allow_pickle=True).item()
     else:
-        if modeltype == 'tf':
-            w2i, i2w = make_vocabulary_tf(YSequences, pathOfSequences, nameOfVoc)
-        else:
-            w2i, i2w = make_vocabulary_torch_ctc(YSequences, pathOfSequences, nameOfVoc)
+        w2i, i2w = make_vocabulary(YSequences, pathOfSequences, nameOfVoc)
 
     return w2i, i2w
 
-def make_vocabulary_tf(YSequences, pathToSave, nameOfVoc):
+def make_vocabulary(YSequences, pathToSave, nameOfVoc):
     vocabulary = set()
     for samples in YSequences:
         for element in samples:
@@ -66,28 +59,6 @@ def make_vocabulary_tf(YSequences, pathToSave, nameOfVoc):
     #Save the vocabulary
     np.save(pathToSave + "/" + nameOfVoc + "w2i.npy", w2i)
     np.save(pathToSave + "/" + nameOfVoc + "i2w.npy", i2w)
-
-    return w2i, i2w
-
-def make_vocabulary_torch_ctc(YSequences, pathToSave, nameOfVoc):
-    vocabulary = set()
-    for samples in YSequences:
-        for element in samples:
-                #print(token)
-                vocabulary.update(element)
-
-    #Vocabulary created
-    w2i = {symbol:idx+2 for idx,symbol in enumerate(vocabulary)}
-    i2w = {idx+2:symbol for idx,symbol in enumerate(vocabulary)}
-    
-    w2i['<blank>'] = 0
-    i2w[0] = '<blank>'
-    w2i['<pad>'] = 1
-    i2w[1] = '<pad>'
-
-    #Save the vocabulary
-    np.save(pathToSave + "/" + nameOfVoc + "w2i_torch_ctc.npy", w2i)
-    np.save(pathToSave + "/" + nameOfVoc + "i2w_torch_ctc.npy", i2w)
 
     return w2i, i2w
 

@@ -44,7 +44,7 @@ def data_preparation_CTC(X, Y):
     max_image_height = max([img.shape[0] for img in X])
 
     X_train = np.zeros(shape=[len(X), max_image_height, max_image_width, 1], dtype=np.float32)
-    L_train = np.zeros(shape=[len(X)])
+    L_train = np.zeros(shape=[len(X),1])
 
     for i, img in enumerate(X):
         X_train[i, 0:img.shape[0], 0:img.shape[1], 0] = img
@@ -52,8 +52,8 @@ def data_preparation_CTC(X, Y):
 
     max_length_seq = max([len(w) for w in Y])
 
-    Y_train = np.ones(shape=[len(Y),max_length_seq])
-    T_train = np.zeros(shape=[len(Y)])
+    Y_train = np.zeros(shape=[len(Y),max_length_seq])
+    T_train = np.zeros(shape=[len(Y),1])
     for i, seq in enumerate(Y):
         Y_train[i, 0:len(seq)] = seq
         T_train[i] = len(seq)

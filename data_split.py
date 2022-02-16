@@ -7,16 +7,14 @@ import numpy as np
 import sys
 import json
 
-def load_data_muret(IMG_PATH, JSON_PATH):
+def load_data_muret(IMG_PATH, AGNOSTIC_PATH):
     X = []
     Y = []
-    for folder in tqdm.tqdm(os.listdir(JSON_PATH)):
-        for file in os.listdir(f"{JSON_PATH}/{folder}"):
-            with open(f"{JSON_PATH}/{folder}/{file}") as jsonfile:
+    for folder in tqdm.tqdm(os.listdir(AGNOSTIC_PATH)):
+        for file in os.listdir(f"{AGNOSTIC_PATH}/{folder}"):
+            with open(f"{AGNOSTIC_PATH}/{folder}/{file}") as jsonfile:
                 data = json.load(jsonfile)
-                image = cv2.imread(f"{IMG_PATH}/{folder}/masters/{data['filename']}", 0)
-                bbox = data["pages"][0]['bounding_box']
-                image = image[bbox["fromY"]:bbox["toY"], bbox["fromX"]:bbox["toX"]]
+                image = cv2.imread(f"{IMG_PATH}/{folder}/masters/{data['filename']}")
                 X.append(image)
                 Y.append(data)
     return X, Y
@@ -26,7 +24,7 @@ def load_data(IMG_PATH, AGNOSTIC_PATH):
     Y = []
     for file in tqdm.tqdm(os.listdir(IMG_PATH)):
         sample = file.split(".")[0]
-        X.append(cv2.imread(f"{IMG_PATH}{sample}.png", 0))
+        X.append(cv2.imread(f"{IMG_PATH}{sample}.png"))
         with open(f"{AGNOSTIC_PATH}{sample}.txt") as f:
             string_array = f.readline().split("+")
             for idx, token in enumerate(string_array):
@@ -60,15 +58,15 @@ def save_partition_json(corpus_name,folder, X, Y):
 def main():
     args = parse_arguments_ds()
     ratio = 0.5
-    X, Y = load_data(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
+    X, Y = load_data_muret(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
 
     XTrain, XValTest, YTrain, YValTest = train_test_split(X,Y, test_size=0.3, shuffle=True)
 
     XVal, XTest, YVal, YTest = train_test_split(XValTest,YValTest, test_size=0.5)
 
-    save_partition(args.corpus_name, "train", XTrain, YTrain)
-    save_partition(args.corpus_name, "val", XVal, YVal)
-    save_partition(args.corpus_name, "test", XTest, YTest)
+    save_partition_json(args.corpus_name, "train", XTrain, YTrain)
+    save_partition_json(args.corpus_name, "val", XVal, YVal)
+    save_partition_json(args.corpus_name, "test", XTest, YTest)
 
 
 

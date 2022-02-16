@@ -1,7 +1,7 @@
 from utils import parse_arguments, check_and_retrieveVocabulary
 from SPAN_Torch.SPAN import get_span_model
 import torch
-from data_load import load_data_testcase
+from data_load import load_data_jsonMuret, load_data_testcase
 import numpy as np
 import torch.optim as optim
 from utils import levenshtein
@@ -9,6 +9,9 @@ from itertools import groupby
 import random
 from tqdm import tqdm
 import cv2
+from DataAugmentationGenerator import DataAugmentationGenerator
+import sys
+import json
 
 def test_model(model, X, Y, i2w, device):
     acc_ed_dist = 0
@@ -31,7 +34,7 @@ def test_model(model, X, Y, i2w, device):
           out_best = [k for k, g in groupby(list(out_best))]
           decoded = []
           for c in out_best:
-              if c > 0:  # CTC Blank must be ignored
+              if c < len(i2w):  # CTC Blank must be ignored
                   decoded.append(i2w[c.item()])
 
           groundtruth = [i2w[label] for label in Y[i]]
@@ -76,22 +79,56 @@ def batch_generator(X,Y, BATCH_SIZE, synth_prop=0.3):
     while True:
         BatchX = X[idx:idx+BATCH_SIZE]
         BatchY = Y[idx:idx+BATCH_SIZE]
+
         yield data_preparation_CTC(BatchX, BatchY)
 
         idx = (idx + BATCH_SIZE) % len(X)
 
+def batch_synth_generator(w2i):
+    while True:
+        #BatchX = X[idx:idx+BATCH_SIZE]
+        #BatchY = Y[idx:idx+BATCH_SIZE]
+        img, json_str = DataAugmentationGenerator.generateNewImageFromListByBoundingBoxesRandomSelectionAuto(f"/workspace/experiments/Data/SEILS/train/", 1, False, False, 0.2)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        data = json.loads(json_str)
+        bbox = data["pages"][0]['bounding_box']
+        image = img[bbox["fromY"]:bbox["toY"], bbox["fromX"]:bbox["toX"]]
+        sequence = []
+        for region in data["pages"][0]["regions"]:
+            if region["type"] == "staff":
+                if "symbols" in region: # Avoid empty staves
+                    for symbol in region["symbols"]:
+                        sequence.append(w2i[f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}"])
+
+        
+        yield data_preparation_CTC([image], [sequence])
+
 def main():
     args = parse_arguments()
-    print("Loading train set:")
-    XTrain, YTrain = load_data_testcase(PATH=f"{args.data_path}/train/")
-    print("Loading val set:")
-    XVal, YVal = load_data_testcase(PATH=f"{args.data_path}/val/")
-    print("Loading test set:")
-    XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test/")
 
-    w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}", modeltype='torch')
+    #img, json = DataAugmentationGenerator.generateNewImageFromListByBoundingBoxesRandomSelectionAuto(f"/workspace/experiments/Data/SEILS/train/", 1, False, False, 0.2)
     
-    ratio = 150/300
+    XTrain, YTrain, XVal, YVal, XTest, YTest = [], [], [], [], [], []
+
+    if args.corpus_name == "ToyPrimus" or args.corpus_name == "FP-Primus":
+        print("Loading train set:")
+        XTrain, YTrain = load_data_testcase(PATH=f"{args.data_path}/train/")
+        print("Loading val set:")
+        XVal, YVal = load_data_testcase(PATH=f"{args.data_path}/val/")
+        print("Loading test set:")
+        XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test/")
+    else:
+        print("Loading MuRet train set:")
+        XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train/")
+        print("Loading MuRet val set:")
+        XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val/")
+        print("Loading MuRet test set:")
+        XTest, YTest = load_data_jsonMuret(PATH=f"{args.data_path}/test/")
+
+    w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
+    
+    #ratio = 150/300
+    ratio = 1
 
     for i in range(len(XTrain)):
         img = (255. - XTrain[i]) / 255.
@@ -128,20 +165,29 @@ def main():
     
     maxwidth = max([img.shape[1] for img in XTrain])
     maxheight = max([img.shape[0] for img in XTrain])
+    print(maxwidth)
+    print(maxheight)
     model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
-    batch_gen = batch_generator(XTrain, YTrain, args.batch_size, synth_prop=0.5)
-    criterion = torch.nn.CTCLoss(blank=0).to(device)
+    
+    #batch_gen = batch_generator(XTrain, YTrain, args.batch_size, synth_prop=0.5)
+    batch_gen = batch_synth_generator(w2i)
+    
+    criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     print(f"Training with {len(XTrain)} samples")
     print(f"Validating with {len(XVal)} samples")
     print(f"Testing with {len(XTest)} samples")
 
+    numsamples = len(XTrain)//args.batch_size
+    numsamples = 1000
+
     for epoch in range(5000):
         model.train()
-        for mini_epoch in range(10):
+        running_avg = 0
+        for mini_epoch in range(5):
             accum_loss = []
-            for _ in range(len(XTrain)//args.batch_size):
+            for _ in range(numsamples):
                 
                 optimizer.zero_grad()
                 
@@ -160,13 +206,15 @@ def main():
 
                 accum_loss.append(loss.item())
             
-            running_avg = np.convolve(accum_loss, np.ones(len(accum_loss))/len(accum_loss), mode='valid')
-            print(f"Step {mini_epoch + 1} / 10 - Loss: {running_avg}")
-
+            running_avg = np.convolve(accum_loss, np.ones(len(accum_loss))/len(accum_loss), mode='valid')[0]
+            print(f"Step {mini_epoch + 1} - Loss: {running_avg}")
+            
+            #print(f"Step {mini_epoch + 1} - Loss: {running_avg}")
+            
         model.eval()
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
         SER_TEST = test_model(model, XVal, YVal, i2w, device)
-        print(f"EPOCH {epoch + 1} ---  VAL SER {SER_VAL} | TEST SER {SER_TEST}")
+        print(f"EPOCH {epoch + 1} --- VAL SER {SER_VAL} | TEST SER {SER_TEST}")
 
         
 if __name__=="__main__":
