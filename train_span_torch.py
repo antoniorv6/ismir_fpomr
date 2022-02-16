@@ -89,9 +89,9 @@ def augmentation_process(X):
 
     X = X[0]
 
-    if np.random.rand() < 0.2:
-        scale = np.random.uniform(0.75, 1)
-        X = DPIAdjusting(X, scale)
+    #if np.random.rand() < 0.2:
+    #    scale = np.random.uniform(0.75, 1)
+    #    X = DPIAdjusting(X, scale)
     
     if np.random.rand() < 0.2:
         kernel_size = np.random.randint(1, 3)
