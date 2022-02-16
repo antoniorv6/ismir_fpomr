@@ -87,7 +87,7 @@ def batch_generator(X,Y, BATCH_SIZE):
 
 def augmentation_process(X):
 
-    X = np.array(X)
+    X = X[0]
 
     if np.random.rand() < 0.2:
         scale = np.random.uniform(0.75, 1)
@@ -119,7 +119,7 @@ def augmentation_process(X):
     if np.random.rand() < 0.2:
         X = SignFlipping(X, contrast_factor)
 
-    return X
+    return [X]
 
 def batch_generator_aug(X,Y, BATCH_SIZE):
     idx = 0
