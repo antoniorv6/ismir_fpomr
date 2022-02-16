@@ -213,7 +213,7 @@ def main():
             
         model.eval()
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
-        SER_TEST = test_model(model, XVal, YVal, i2w, device)
+        SER_TEST = test_model(model, XTest, YTest, i2w, device)
         print(f"EPOCH {epoch + 1} --- VAL SER {SER_VAL} | TEST SER {SER_TEST}")
 
         
