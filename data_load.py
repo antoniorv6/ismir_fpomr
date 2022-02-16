@@ -27,6 +27,7 @@ def load_data_jsonMuret(PATH):
     X = []
     Y = []
     for file in tqdm(os.listdir(f"{PATH}")):
+        markedForDelete = False
         with open(f"{PATH}/{file}") as jsonfile:
             if file.split(".")[-1] == "json":
                 data = json.load(jsonfile)
@@ -43,8 +44,11 @@ def load_data_jsonMuret(PATH):
                     X.append(image)
                     Y.append(sequence)
                 else:
-                    os.remove(f"{PATH}/{file}")
-                    os.remove(f"{PATH}/{data['filename']}")
+                    markedForDelete = True
+                
+        if markedForDelete:
+            os.remove(f"{PATH}/{file}")
+            os.remove(f"{PATH}/{data['filename']}")
                 
     return X, Y
 
