@@ -1,4 +1,4 @@
-from augmentations import Brightness, Contrast, DPIAdjusting, Dilation, Erosion, SignFlipping
+from augmentations import Brightness, Contrast, DPIAdjusting, Dilation, Erosion, Perspective
 from utils import parse_arguments, check_and_retrieveVocabulary
 from SPAN_Torch.SPAN import get_span_model
 import torch
@@ -87,34 +87,42 @@ def batch_generator(X,Y, BATCH_SIZE):
 
 def augmentation_process(X):
 
-    X = X[0]
+    X = np.array(X)
 
     if np.random.rand() < 0.2:
+        #print("DPI")
         scale = np.random.uniform(0.75, 1)
         X = DPIAdjusting(X, scale)
     
     if np.random.rand() < 0.2:
         kernel_size = np.random.randint(1, 3)
         iterations = 1
+        #print(f"Dilation - {kernel_size}")
         X = Dilation(X, kernel_size, iterations)
     
     if np.random.rand() < 0.2:
         kernel_size = np.random.randint(1, 3)
         iterations = 1
+        #print(f"Erosion - {kernel_size}")
         X = Erosion(X, kernel_size, iterations)
     
     if np.random.rand() < 0.2:
         brightness_factor = np.random.uniform(0.01, 1)
+        #print(f"Brightness - {brightness_factor}")
         X = Brightness(X, brightness_factor)
     
     if np.random.rand() < 0.2:
         contrast_factor = np.random.uniform(0.01, 1)
+        #print(f"Contrast - {contrast_factor}")
         X = Contrast(X, contrast_factor)
     
     if np.random.rand() < 0.2:
-        X = SignFlipping(X, contrast_factor)
+        scale_factor = np.random.uniform(0, 0.3)
+        #print(f"Random perspective - {scale_factor}")
+        X = Perspective(X, scale_factor)
 
-    return [X]
+    X = (255. - X) / 255.
+    return X
 
 def batch_generator_aug(X,Y, BATCH_SIZE):
     idx = 0
@@ -122,9 +130,9 @@ def batch_generator_aug(X,Y, BATCH_SIZE):
         BatchX = X[idx:idx+BATCH_SIZE]
         BatchY = Y[idx:idx+BATCH_SIZE]
 
-        BatchX = augmentation_process(BatchX)
+        BatchX = augmentation_process(BatchX[0])
 
-        yield data_preparation_CTC(BatchX, BatchY)
+        yield data_preparation_CTC([BatchX], BatchY)
 
         idx = (idx + BATCH_SIZE) % len(X)
 
@@ -176,6 +184,7 @@ def main():
 
     for i in range(len(XTrain)):
         img = (255. - XTrain[i]) / 255.
+        #img = XTrain[i]
         width = int(np.ceil(img.shape[1] * ratio))
         height = int(np.ceil(img.shape[0] * ratio))
         XTrain[i] = cv2.resize(img, (width, height))
@@ -209,13 +218,22 @@ def main():
     
     maxwidth = max([img.shape[1] for img in XTrain])
     maxheight = max([img.shape[0] for img in XTrain])
+
     print(maxwidth)
     print(maxheight)
     model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
+    print(f"Using {device} device")
     
-    #batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
-    #batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
-    batch_gen = batch_synth_generator(w2i)
+    batch_gen = None
+    if args.model_name == "SPAN":
+        print("Using simple generator")
+        batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
+    if args.model_name == "SPAN_AUG":
+        print("Using basic data augmentation generation")
+        batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
+    if args.model_name == "SPAN_SYNTH":
+        print("Using synth augmentation")
+        batch_gen = batch_synth_generator(w2i)
     
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
@@ -224,8 +242,8 @@ def main():
     print(f"Validating with {len(XVal)} samples")
     print(f"Testing with {len(XTest)} samples")
 
-    numsamples = len(XTrain)//args.batch_size
-    #numsamples = 1000
+    #numsamples = len(XTrain)//args.batch_size
+    numsamples = 200
 
     bestSer = 10000
 
@@ -274,3 +292,4 @@ def main():
         
 if __name__=="__main__":
     main()
+

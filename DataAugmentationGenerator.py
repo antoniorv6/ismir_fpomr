@@ -293,7 +293,6 @@ class DataAugmentationGenerator:
             
             #FileManager.saveImageFullPath(new_img, src_filepath_out)
             #print("Saved data augmentation image in " + str(src_filepath_out) + " (from " + str(img_pathfile) + ")")
-#
             #gt_imgs = MuretInterface.generateGTImages(new_bbox_regions, (new_img.shape[0], new_img.shape[1]), reduction_factor)
             #idx_gt = 0
             #for key_region in new_bbox_regions:
