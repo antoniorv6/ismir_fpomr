@@ -140,3 +140,5 @@ Data/*
 *.tgz
 *.h5
 
+models/*
+
