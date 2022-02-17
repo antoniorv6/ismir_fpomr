@@ -171,7 +171,11 @@ def main():
         XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test")
     else:
         print("Loading MuRet train set:")
-        XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train")
+        if args.model_name == "SPAN_SYNTH":
+            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train_daug")
+        else:
+            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train")
+
         print("Loading MuRet val set:")
         XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val")
         print("Loading MuRet test set:")
@@ -225,15 +229,15 @@ def main():
     print(f"Using {device} device")
     
     batch_gen = None
-    if args.model_name == "SPAN":
+    if args.model_name == "SPAN" or args.model_name == "SPAN_SYNTH":
         print("Using simple generator")
         batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
     if args.model_name == "SPAN_AUG":
         print("Using basic data augmentation generation")
         batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
-    if args.model_name == "SPAN_SYNTH":
-        print("Using synth augmentation")
-        batch_gen = batch_synth_generator(w2i)
+    #if args.model_name == "SPAN_SYNTH":
+    #    print("Using synth augmentation")
+    #    batch_gen = batch_synth_generator(w2i)
     
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
