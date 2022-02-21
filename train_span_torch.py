@@ -162,13 +162,13 @@ def main():
     
     XTrain, YTrain, XVal, YVal, XTest, YTest = [], [], [], [], [], []
 
-    if args.corpus_name == "ToyPrimus" or args.corpus_name == "FP-Primus":
+    if args.corpus_name == "ToyPrimus" or args.corpus_name == "FP-Primus" or args.corpus_name == "CAPITAN":
         print("Loading train set:")
-        XTrain, YTrain = load_data_testcase(PATH=f"{args.data_path}/train")
+        XTrain, YTrain = load_data_testcase(PATH=f"{args.data_path}/train/")
         print("Loading val set:")
-        XVal, YVal = load_data_testcase(PATH=f"{args.data_path}/val")
+        XVal, YVal = load_data_testcase(PATH=f"{args.data_path}/val/")
         print("Loading test set:")
-        XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test")
+        XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test/")
     else:
         print("Loading MuRet train set:")
         if args.model_name == "SPAN_SYNTH":
@@ -184,11 +184,11 @@ def main():
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
     #ratio = 150/300
-    ratio = 1
+    ratio = 0.6
 
     for i in range(len(XTrain)):
-        img = (255. - XTrain[i]) / 255.
-        #img = XTrain[i]
+        #img = (255. - XTrain[i]) / 255.
+        img = XTrain[i]
         width = int(np.ceil(img.shape[1] * ratio))
         height = int(np.ceil(img.shape[0] * ratio))
         XTrain[i] = cv2.resize(img, (width, height))
