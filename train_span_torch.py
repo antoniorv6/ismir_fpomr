@@ -230,16 +230,17 @@ def main():
                                     in_channels=1, 
                                     out_size=len(w2i), 
                                     encoder_weights=args.encoder_weights)
-                                    
+
     print(f"Using {device} device")
     
     batch_gen = None
-    if args.model_name == "SPAN" or args.model_name == "SPAN_SYNTH":
-        print("Using simple generator")
-        batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
     if args.model_name == "SPAN_AUG":
         print("Using basic data augmentation generation")
         batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
+    else:
+        print("Using simple generator")
+        batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
+    
     #if args.model_name == "SPAN_SYNTH":
     #    print("Using synth augmentation")
     #    batch_gen = batch_synth_generator(w2i)
@@ -291,8 +292,8 @@ def main():
 
         if SER_VAL < bestSer:
             print("Validation SER improved - Saving weights")
-            torch.save(model.state_dict(), f"models/weights/{args.model_name}.pth")
-            torch.save(optimizer.state_dict(), f"models/optimizers/{args.model_name}.pth")
+            torch.save(model.state_dict(), f"models/weights/{args.model_name}_{args.corpus_name}.pt")
+            torch.save(optimizer.state_dict(), f"models/optimizers/{args.model_name}_{args.corpus_name}.pt")
             bestSer = SER_VAL
 
 
