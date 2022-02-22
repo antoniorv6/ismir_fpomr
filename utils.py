@@ -17,6 +17,7 @@ def parse_arguments():
     parser.add_argument('--corpus_name', type=str, default=None, help="Corpus name")
     parser.add_argument('--model_name', type=str, default=None, help="Model name")
     parser.add_argument('--data_path', type=str, default=None, help="Image folder to load")
+    parser.add_argument('--encoder_weights', type=str, default=None, help="Image folder to load")
     parser.add_argument('--batch_size', type=int, default=None, help="Batch size")
 
 

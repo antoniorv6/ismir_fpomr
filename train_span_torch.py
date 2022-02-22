@@ -184,7 +184,7 @@ def main():
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
     #ratio = 150/300
-    ratio = 0.6
+    ratio = 1
 
     for i in range(len(XTrain)):
         img = (255. - XTrain[i]) / 255.
@@ -225,7 +225,12 @@ def main():
 
     print(maxwidth)
     print(maxheight)
-    model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
+    model, device = get_span_model(maxwidth=maxwidth, 
+                                    maxheight=maxheight, 
+                                    in_channels=1, 
+                                    out_size=len(w2i), 
+                                    encoder_weights=args.encoder_weights)
+                                    
     print(f"Using {device} device")
     
     batch_gen = None

@@ -181,9 +181,14 @@ class LineDecoder(nn.Module):
 
 class SPANPage(nn.Module):
 
-    def __init__(self, in_channels, out_cats):
+    def __init__(self, in_channels, out_cats, pretrain_path=None):
         super(SPANPage, self).__init__()
         self.encoder = Encoder(in_channels=in_channels)
+
+        if pretrain_path != None:
+            print(f"Loading weights from {pretrain_path}")
+            self.encoder.load_state_dict(torch.load(pretrain_path))
+
         self.decoder = PageDecoder(out_cats=out_cats)
     
     def forward(self, inputs):
@@ -222,9 +227,9 @@ def SPAN_Weight_Init(m):
             zeros_(m.bias)
 
 
-def get_span_model(maxwidth, maxheight, in_channels, out_size):
+def get_span_model(maxwidth, maxheight, in_channels, out_size, encoder_weights):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = SPANPage(in_channels=in_channels, out_cats=out_size+1).to(device)
+    model = SPANPage(in_channels=in_channels, out_cats=out_size+1, pretrain_path=encoder_weights).to(device)
     summary(model, input_size=[(1,in_channels,maxheight,maxwidth)], dtypes=[torch.float])
     
     return model, device
