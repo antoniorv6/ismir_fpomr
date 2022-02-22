@@ -1,6 +1,6 @@
 from augmentations import Brightness, Contrast, DPIAdjusting, Dilation, Erosion, Perspective
 from utils import parse_arguments, check_and_retrieveVocabulary
-from SPAN_Torch.SPAN import get_span_model
+from SPAN_Torch.SPAN import get_span_model, get_span_stave_model
 import torch
 from data_load import load_data_jsonMuret, load_data_testcase
 import numpy as np
@@ -24,8 +24,6 @@ def test_model(model, X, Y, i2w, device):
       for i in range(len(X)):
           pred = model(torch.Tensor(np.expand_dims(np.expand_dims(X[i],axis=0),axis=0)).to(device))
           
-          b, c, h, w = pred.size()
-          pred = pred.reshape(b, c, h*w)
           pred = pred.permute(0,2,1)
           
           pred = pred[0]
@@ -62,7 +60,7 @@ def data_preparation_CTC(X, Y):
 
     for i, img in enumerate(X):
         X_train[i, 0, 0:img.shape[0], 0:img.shape[1]] = img
-        L_train[i] = (img.shape[1] // 8) * (img.shape[0] // 32)
+        L_train[i] = (img.shape[1] // 8)
 
     max_length_seq = max([len(w) for w in Y])
 
@@ -158,33 +156,31 @@ def batch_synth_generator(w2i):
 def main():
     args = parse_arguments()
 
-    #img, json = DataAugmentationGenerator.generateNewImageFromListByBoundingBoxesRandomSelectionAuto(f"/workspace/experiments/Data/SEILS/train/", 1, False, False, 0.2)
-    
     XTrain, YTrain, XVal, YVal, XTest, YTest = [], [], [], [], [], []
 
-    if args.corpus_name == "ToyPrimus" or args.corpus_name == "FP-Primus" or args.corpus_name == "CAPITAN":
+    if args.corpus_name == "SEILS":
+        print("Loading MuRet train set:")
+        if args.model_name == "SPAN_SYNTH":
+            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train_daug")
+        else:
+            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train")
+        print("Loading MuRet val set:")
+        XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val")
+        print("Loading MuRet test set:")
+        XTest, YTest = load_data_jsonMuret(PATH=f"{args.data_path}/test")
+    else:
         print("Loading train set:")
         XTrain, YTrain = load_data_testcase(PATH=f"{args.data_path}/train/")
         print("Loading val set:")
         XVal, YVal = load_data_testcase(PATH=f"{args.data_path}/val/")
         print("Loading test set:")
         XTest, YTest = load_data_testcase(PATH=f"{args.data_path}/test/")
-    else:
-        print("Loading MuRet train set:")
-        if args.model_name == "SPAN_SYNTH":
-            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train_daug")
-        else:
-            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train")
-
-        print("Loading MuRet val set:")
-        XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val")
-        print("Loading MuRet test set:")
-        XTest, YTest = load_data_jsonMuret(PATH=f"{args.data_path}/test")
+       
 
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
     #ratio = 150/300
-    ratio = 0.6
+    ratio = 1
 
     for i in range(len(XTrain)):
         img = (255. - XTrain[i]) / 255.
@@ -225,7 +221,7 @@ def main():
 
     print(maxwidth)
     print(maxheight)
-    model, device = get_span_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
+    model, device = get_span_stave_model(maxwidth=maxwidth, maxheight=maxheight, in_channels=1, out_size=len(w2i))
     print(f"Using {device} device")
     
     batch_gen = None
@@ -235,9 +231,6 @@ def main():
     if args.model_name == "SPAN_AUG":
         print("Using basic data augmentation generation")
         batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
-    #if args.model_name == "SPAN_SYNTH":
-    #    print("Using synth augmentation")
-    #    batch_gen = batch_synth_generator(w2i)
     
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
@@ -264,8 +257,6 @@ def main():
                 predictions = model(net_input.to(device))
                 
                 # From Conv2D output to sequential interpretation by making row concat
-                b, c, h, w = predictions.size()
-                predictions = predictions.reshape(b, c, h*w)
                 predictions = predictions.permute(2,0,1)
 
                 loss = criterion(predictions, net_tar.to(device), input_len.to(device), tar_len.to(device))
@@ -278,7 +269,6 @@ def main():
             running_avg = np.convolve(accum_loss, np.ones(len(accum_loss))/len(accum_loss), mode='valid')[0]
             print(f"Step {mini_epoch + 1} - Loss: {running_avg}")
             
-            #print(f"Step {mini_epoch + 1} - Loss: {running_avg}")
             
         model.eval()
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
@@ -286,8 +276,7 @@ def main():
 
         if SER_VAL < bestSer:
             print("Validation SER improved - Saving weights")
-            torch.save(model.state_dict(), f"models/weights/{args.model_name}.pth")
-            torch.save(optimizer.state_dict(), f"models/optimizers/{args.model_name}.pth")
+            model.save_encoder_weights(f"models/weights/{args.model_name}.pth")
             bestSer = SER_VAL
 
 

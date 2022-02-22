@@ -48,8 +48,47 @@ def split_pages(img, page_data):
     
     return sendIMG, sendSEQ
 
+def load_data_muret_staves(IMG_PATH, AGNOSTIC_PATH):
+    X = []
+    Y = []
+    for folder in tqdm.tqdm(os.listdir(AGNOSTIC_PATH)):
+        for file in os.listdir(f"{AGNOSTIC_PATH}/{folder}"):
+            with open(f"{AGNOSTIC_PATH}/{folder}/{file}") as jsonfile:
+                data = json.load(jsonfile)
+                image = cv2.imread(f"{IMG_PATH}/{folder}/masters/{data['filename']}")
+                for region in data["pages"][0]["regions"]:
+                    sequence = []
+                    if region["type"] == "staff":
+                        if "symbols" in region: # Avoid empty staves
+                            for symbol in region["symbols"]:
+                                sequence.append(f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}")
+                            if sequence:
+                                bbox = region['bounding_box']
+                                X.append(image[bbox["fromY"]:bbox["toY"], bbox["fromX"]:bbox["toX"]])
+                                Y.append(sequence)
+    return X, Y
 
-def load_data_muret(IMG_PATH, AGNOSTIC_PATH):
+def load_data_muret_seils(IMG_PATH, AGNOSTIC_PATH):
+    X = []
+    Y = []
+    for folder in tqdm.tqdm(os.listdir(AGNOSTIC_PATH)):
+        for file in os.listdir(f"{AGNOSTIC_PATH}/{folder}"):
+            with open(f"{AGNOSTIC_PATH}/{folder}/{file}") as jsonfile:
+                data = json.load(jsonfile)
+                image = cv2.imread(f"{IMG_PATH}/{folder}/masters/{data['filename']}")
+                sequence = []
+                for region in data["pages"][0]["regions"]:
+                    if region["type"] == "staff":
+                        if "symbols" in region: # Avoid empty staves
+                            for symbol in region["symbols"]:
+                                sequence.append(f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}")
+                if sequence:
+                    X.append(image)
+                    Y.append(sequence)
+    return X, Y
+
+
+def load_data_muret_capitan(IMG_PATH, AGNOSTIC_PATH):
     X = []
     Y = []
     for file in tqdm.tqdm(os.listdir(AGNOSTIC_PATH)):
@@ -119,8 +158,7 @@ def save_partition_json(corpus_name,folder, X, Y):
 
 def main():
     args = parse_arguments_ds()
-    ratio = 0.5
-    X, Y = load_data_muret(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
+    X, Y = load_data_muret_staves(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
     print(len(X))
     print(len(Y))
 

@@ -1,3 +1,4 @@
+from json import decoder
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -189,7 +190,21 @@ class SPANPage(nn.Module):
         x = self.encoder(inputs)
         x = self.decoder(x)
         return x
+
+class SPANStaves(nn.Module):
+    def __init__(self, in_channels, out_cats):
+        super(SPANStaves, self).__init__()
+        self.encoder = Encoder(in_channels=in_channels)
+        self.decoder = LineDecoder(out_cats=out_cats)
     
+    def save_encoder_weights(self, path):
+        torch.save(self.encoder.state_dict(), path)
+    
+    def forward(self, inputs):
+        x = self.encoder(inputs)
+        x = self.decoder(x)
+        return x
+
 
 def SPAN_Weight_Init(m):
     """
@@ -210,9 +225,15 @@ def SPAN_Weight_Init(m):
 def get_span_model(maxwidth, maxheight, in_channels, out_size):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SPANPage(in_channels=in_channels, out_cats=out_size+1).to(device)
-    #model.apply(SPAN_Weight_Init)
     summary(model, input_size=[(1,in_channels,maxheight,maxwidth)], dtypes=[torch.float])
     
+    return model, device
+
+def get_span_stave_model(maxwidth, maxheight, in_channels, out_size):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = SPANStaves(in_channels=in_channels, out_cats=out_size+1).to(device)
+    summary(model, input_size=[(1,in_channels,maxheight,maxwidth)], dtypes=[torch.float])
+
     return model, device
 
 if __name__ == "__main__":
