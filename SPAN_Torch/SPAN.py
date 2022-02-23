@@ -187,7 +187,7 @@ class SPANPage(nn.Module):
 
         if pretrain_path != None:
             print(f"Loading weights from {pretrain_path}")
-            self.encoder.load_state_dict(torch.load(pretrain_path))
+            self.encoder.load_state_dict(torch.load(pretrain_path), strict=True)
 
         self.decoder = PageDecoder(out_cats=out_cats)
     

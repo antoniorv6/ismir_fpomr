@@ -184,11 +184,11 @@ def main():
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
     #ratio = 150/300
-    ratio = 1
+    ratio = 0.6
 
     for i in range(len(XTrain)):
-        img = (255. - XTrain[i]) / 255.
-        #img = XTrain[i]
+        #img = (255. - XTrain[i]) / 255.
+        img = XTrain[i]
         width = int(np.ceil(img.shape[1] * ratio))
         height = int(np.ceil(img.shape[0] * ratio))
         XTrain[i] = cv2.resize(img, (width, height))
@@ -287,6 +287,7 @@ def main():
             #print(f"Step {mini_epoch + 1} - Loss: {running_avg}")
             
         model.eval()
+        SER_TRAIN = test_model(model, XTrain, YTrain, i2w, device)
         SER_VAL = test_model(model, XVal, YVal, i2w, device)
         SER_TEST = test_model(model, XTest, YTest, i2w, device)
 
@@ -297,7 +298,7 @@ def main():
             bestSer = SER_VAL
 
 
-        print(f"EPOCH {epoch + 1} --- VAL SER {SER_VAL} | TEST SER {SER_TEST}")
+        print(f"EPOCH {epoch + 1} --- TRAIN SER {SER_TRAIN} | VAL SER {SER_VAL} | TEST SER {SER_TEST}")
 
         
 if __name__=="__main__":
