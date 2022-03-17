@@ -1,6 +1,6 @@
 
 import GTJSONReaderMuret as muret
-from CustomJson import CustomJson
+from DataGeneration.CustomJson import CustomJson
 from file_manager import FileManager
 import numpy as np
 import cv2

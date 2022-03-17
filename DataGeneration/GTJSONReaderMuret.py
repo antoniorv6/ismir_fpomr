@@ -16,7 +16,7 @@ from enum import Enum
 import numpy as np
 import random
 
-from CustomJson import CustomJson
+from .CustomJson import CustomJson
 from file_manager import FileManager
 import json
         

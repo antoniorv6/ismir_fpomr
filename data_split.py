@@ -110,13 +110,17 @@ def load_data_muret_capitan(IMG_PATH, AGNOSTIC_PATH):
                 
                 else:
                     if "regions" in page:
+                        regions = []
                         for region in page["regions"]:
                             if region["type"] == "staff":
                                 if "symbols" in region: # Avoid empty staves
-                                    for symbol in region["symbols"]:
-                                        sequence.append(f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}")
-                    if sequence:
+                                    regions.append([[f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}" for symbol in region["symbols"]], region["bounding_box"]["fromY"]])
+                                    
                         X.append(image_append)
+                        sequence = []
+                        for element in regions:
+                            for symbol in element[0]:
+                                sequence.append(symbol)
                         Y.append(sequence)
     return X, Y
 
@@ -158,7 +162,7 @@ def save_partition_json(corpus_name,folder, X, Y):
 
 def main():
     args = parse_arguments_ds()
-    X, Y = load_data_muret_staves(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
+    X, Y = load_data_muret_capitan(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
     print(len(X))
     print(len(Y))
 

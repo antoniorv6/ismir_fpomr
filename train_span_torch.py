@@ -10,7 +10,7 @@ from itertools import groupby
 import random
 from tqdm import tqdm
 import cv2
-from DataAugmentationGenerator import DataAugmentationGenerator
+#from DataAugmentationGenerator import DataAugmentationGenerator
 import sys
 import json
 
@@ -184,10 +184,10 @@ def main():
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
     #ratio = 150/300
-    ratio = 0.6
+    ratio = 0.75
 
     for i in range(len(XTrain)):
-        #img = (255. - XTrain[i]) / 255.
+        img = (255. - XTrain[i]) / 255.
         img = XTrain[i]
         width = int(np.ceil(img.shape[1] * ratio))
         height = int(np.ceil(img.shape[0] * ratio))
