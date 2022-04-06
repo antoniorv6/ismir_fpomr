@@ -127,15 +127,28 @@ def load_data_muret_capitan(IMG_PATH, AGNOSTIC_PATH):
 def load_data(IMG_PATH, AGNOSTIC_PATH):
     X= []
     Y = []
+    limit = 10000
+    i = 0
     for file in tqdm.tqdm(os.listdir(IMG_PATH)):
+        i+=1
         sample = file.split(".")[0]
-        X.append(cv2.imread(f"{IMG_PATH}{sample}.png"))
-        with open(f"{AGNOSTIC_PATH}{sample}.txt") as f:
+        img = cv2.imread(f"{IMG_PATH}{sample}.png")
+        
+        width = int(np.ceil(img.shape[1] * 0.5))
+        height = int(np.ceil(img.shape[0] * 0.5))
+        img = cv2.resize(img, (width, height))
+
+        X.append(img)
+
+        with open(f"{AGNOSTIC_PATH}cod3_{sample}.txt") as f:
             string_array = f.readline().split("+")
             for idx, token in enumerate(string_array):
                 string_array[idx] = token.strip()
             
             Y.append(string_array)
+        
+        if i == limit:
+            break
     
     return X, Y
 
@@ -162,7 +175,7 @@ def save_partition_json(corpus_name,folder, X, Y):
 
 def main():
     args = parse_arguments_ds()
-    X, Y = load_data_muret_capitan(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
+    X, Y = load_data(IMG_PATH=args.image_folder, AGNOSTIC_PATH=args.agnostic_folder)
     print(len(X))
     print(len(Y))
 

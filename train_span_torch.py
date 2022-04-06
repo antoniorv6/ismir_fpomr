@@ -184,7 +184,7 @@ def main():
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
     #ratio = 150/300
-    ratio = 0.75
+    ratio = 1
 
     for i in range(len(XTrain)):
         img = (255. - XTrain[i]) / 255.

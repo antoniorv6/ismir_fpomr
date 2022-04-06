@@ -249,7 +249,7 @@ def main():
         running_avg = 0
         for mini_epoch in range(5):
             accum_loss = []
-            for _ in range(numsamples):
+            for _ in tqdm(range(numsamples)):
                 
                 optimizer.zero_grad()
                 
