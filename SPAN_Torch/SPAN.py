@@ -127,19 +127,19 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
 
         self.conv_blocks = nn.ModuleList([
-            ConvBlock(in_c=in_channels, out_c=32, stride=(1,1), dropout=dropout),
+            ConvBlock(in_c=in_channels, out_c=16, stride=(1,1), dropout=dropout),
+            ConvBlock(in_c=16, out_c=32, stride=(2,2), dropout=dropout),
             ConvBlock(in_c=32, out_c=64, stride=(2,2), dropout=dropout),
             ConvBlock(in_c=64, out_c=128, stride=(2,2), dropout=dropout),
-            ConvBlock(in_c=128, out_c=256, stride=(2,2), dropout=dropout),
-            ConvBlock(in_c=256, out_c=512, stride=(2,1), dropout=dropout),
-            ConvBlock(in_c=512, out_c=512, stride=(2,1), dropout=dropout),
+            ConvBlock(in_c=128, out_c=128, stride=(2,1), dropout=dropout),
+            ConvBlock(in_c=128, out_c=128, stride=(2,1), dropout=dropout),
         ])
 
         self.dscblocks = nn.ModuleList([
-            DSCBlock(in_c=512, out_c=512, stride=(1,1), dropout = dropout),
-            DSCBlock(in_c=512, out_c=512, stride=(1,1), dropout = dropout),
-            DSCBlock(in_c=512, out_c=512, stride=(1,1), dropout = dropout),
-            DSCBlock(in_c=512, out_c=512, stride=(1,1), dropout = dropout)
+            DSCBlock(in_c=128, out_c=128, stride=(1,1), dropout = dropout),
+            DSCBlock(in_c=128, out_c=256, stride=(1,1), dropout = dropout),
+            #DSCBlock(in_c=512, out_c=512, stride=(1,1), dropout = dropout),
+            #DSCBlock(in_c=512, out_c=512, stride=(1,1), dropout = dropout)
         ])
     
     def forward(self, x):
@@ -157,7 +157,7 @@ class PageDecoder(nn.Module):
 
     def __init__(self, out_cats):
         super(PageDecoder, self).__init__()
-        self.dec_conv = nn.Conv2d(in_channels= 512, out_channels= out_cats, kernel_size=(5,5), padding=(2,2))
+        self.dec_conv = nn.Conv2d(in_channels= 256, out_channels= out_cats, kernel_size=(5,5), padding=(2,2))
     
     def forward(self, inputs):
         x = self.dec_conv(inputs)
