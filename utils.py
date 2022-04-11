@@ -128,3 +128,10 @@ def levenshtein(a,b):
             current[j] = min(add, delete, change)
 
     return current[n]
+
+def writeResults(corpus,name, predictions, gt):
+    with open(f"test_predictions/{corpus}/{name}_pred.txt", "w+") as predfile:
+        predfile.write(" ".join(predictions))
+    
+    with open(f"test_predictions/{corpus}/{name}_gt.txt", "w+") as gtfile:
+        gtfile.write(" ".join(gt))

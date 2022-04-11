@@ -1,3 +1,4 @@
+from base64 import decode
 from augmentations import Brightness, Contrast, DPIAdjusting, Dilation, Erosion, Perspective
 from utils import parse_arguments, check_and_retrieveVocabulary
 from SPAN_Torch.SPAN import get_span_model
@@ -9,8 +10,10 @@ from utils import levenshtein
 from itertools import groupby
 import random
 import cv2
+from utils import writeResults
+import os
 
-def test_model(model, X, Y, i2w, device):
+def test_model(model, X, Y, i2w, device, write_results, corpus):
     acc_ed_dist = 0
     acc_len = 0
 
@@ -40,10 +43,11 @@ def test_model(model, X, Y, i2w, device):
               print(f"Prediction - {decoded}")
               print(f"True - {groundtruth}")
 
-          
+          if write_results:
+              writeResults(corpus, i, decoded, groundtruth)
+
           acc_ed_dist += levenshtein(decoded, groundtruth)
           acc_len += len(groundtruth)
-
 
     ser = 100.*acc_ed_dist / acc_len
     
@@ -134,8 +138,6 @@ def batch_generator_aug(X,Y, BATCH_SIZE):
 
 def main():
     args = parse_arguments()
-
-    #img, json = DataAugmentationGenerator.generateNewImageFromListByBoundingBoxesRandomSelectionAuto(f"/workspace/experiments/Data/SEILS/train/", 1, False, False, 0.2)
     
     XTrain, YTrain, XVal, YVal, XTest, YTest = [], [], [], [], [], []
 
@@ -160,7 +162,6 @@ def main():
 
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}")
     
-    #ratio = 150/300
     ratio = 1
 
     for i in range(len(XTrain)):
@@ -218,10 +219,6 @@ def main():
         print("Using simple generator")
         batch_gen = batch_generator(XTrain, YTrain, args.batch_size)
     
-    #if args.model_name == "SPAN_SYNTH":
-    #    print("Using synth augmentation")
-    #    batch_gen = batch_synth_generator(w2i)
-    
     criterion = torch.nn.CTCLoss(blank=len(w2i)).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
@@ -230,10 +227,12 @@ def main():
     print(f"Testing with {len(XTest)} samples")
 
     numsamples = len(XTrain)//args.batch_size
-    #numsamples = 200
 
     bestSer = 10000
     bestTest = 10000
+
+    if not os.path.isdir(f"test_predictions/{args.corpus_name}/"):
+        os.makedirs(f"test_predictions/{args.corpus_name}/")
 
     for epoch in range(5000):
         model.train()
@@ -262,9 +261,9 @@ def main():
             print(f"Step {mini_epoch + 1} - Loss: {avg}")
             
         model.eval()
-        SER_TRAIN = test_model(model, XTrain, YTrain, i2w, device)
-        SER_VAL = test_model(model, XVal, YVal, i2w, device)
-        SER_TEST = test_model(model, XTest, YTest, i2w, device)
+        SER_TRAIN = test_model(model, XTrain, YTrain, i2w, device, False, args.corpus_name)
+        SER_VAL = test_model(model, XVal, YVal, i2w, device, False, args.corpus_name)
+        SER_TEST = test_model(model, XTest, YTest, i2w, device, True, args.corpus_name)
 
         if SER_VAL < bestSer:
             print("Validation SER improved - Saving weights")
