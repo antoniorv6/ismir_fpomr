@@ -8,11 +8,7 @@ import torch.optim as optim
 from utils import levenshtein
 from itertools import groupby
 import random
-from tqdm import tqdm
 import cv2
-#from DataAugmentationGenerator import DataAugmentationGenerator
-import sys
-import json
 
 def test_model(model, X, Y, i2w, device):
     acc_ed_dist = 0
@@ -136,25 +132,6 @@ def batch_generator_aug(X,Y, BATCH_SIZE):
 
         idx = (idx + BATCH_SIZE) % len(X)
 
-def batch_synth_generator(w2i):
-    while True:
-        #BatchX = X[idx:idx+BATCH_SIZE]
-        #BatchY = Y[idx:idx+BATCH_SIZE]
-        img, json_str = DataAugmentationGenerator.generateNewImageFromListByBoundingBoxesRandomSelectionAuto(f"/workspace/experiments/Data/SEILS/train/", 1, False, False, 0.2)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        data = json.loads(json_str)
-        bbox = data["pages"][0]['bounding_box']
-        image = img[bbox["fromY"]:bbox["toY"], bbox["fromX"]:bbox["toX"]]
-        sequence = []
-        for region in data["pages"][0]["regions"]:
-            if region["type"] == "staff":
-                if "symbols" in region: # Avoid empty staves
-                    for symbol in region["symbols"]:
-                        sequence.append(w2i[f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}"])
-
-        
-        yield data_preparation_CTC([image], [sequence])
-
 def main():
     args = parse_arguments()
 
@@ -260,9 +237,8 @@ def main():
 
     for epoch in range(5000):
         model.train()
-        running_avg = 0
         for mini_epoch in range(5):
-            accum_loss = []
+            accum_loss = 0
             for _ in range(numsamples):
                 
                 optimizer.zero_grad()
@@ -280,12 +256,10 @@ def main():
                 loss.backward()
                 optimizer.step()
 
-                accum_loss.append(loss.item())
+                accum_loss += loss.item() * args.batch_size
             
-            running_avg = np.convolve(accum_loss, np.ones(len(accum_loss))/len(accum_loss), mode='valid')[0]
-            print(f"Step {mini_epoch + 1} - Loss: {running_avg}")
-            
-            #print(f"Step {mini_epoch + 1} - Loss: {running_avg}")
+            avg = accum_loss / numsamples
+            print(f"Step {mini_epoch + 1} - Loss: {avg}")
             
         model.eval()
         SER_TRAIN = test_model(model, XTrain, YTrain, i2w, device)
@@ -302,8 +276,6 @@ def main():
         print(f"EPOCH {epoch + 1} --- TRAIN SER {SER_TRAIN} | VAL SER {SER_VAL} | TEST SER {SER_TEST}")
         print(f"BEST TEST - {bestTest}")
 
-
-        
 if __name__=="__main__":
     main()
 
