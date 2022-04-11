@@ -256,6 +256,7 @@ def main():
     #numsamples = 200
 
     bestSer = 10000
+    bestTest = 10000
 
     for epoch in range(5000):
         model.train()
@@ -296,9 +297,11 @@ def main():
             torch.save(model.state_dict(), f"models/weights/{args.model_name}_{args.corpus_name}.pt")
             torch.save(optimizer.state_dict(), f"models/optimizers/{args.model_name}_{args.corpus_name}.pt")
             bestSer = SER_VAL
-
+            bestTest = SER_TEST
 
         print(f"EPOCH {epoch + 1} --- TRAIN SER {SER_TRAIN} | VAL SER {SER_VAL} | TEST SER {SER_TEST}")
+        print(f"BEST TEST - {bestTest}")
+
 
         
 if __name__=="__main__":
