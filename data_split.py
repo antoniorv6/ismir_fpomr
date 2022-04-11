@@ -127,7 +127,7 @@ def load_data_muret_capitan(IMG_PATH, AGNOSTIC_PATH):
 def load_data(IMG_PATH, AGNOSTIC_PATH):
     X= []
     Y = []
-    limit = 10000
+    limit = 15000
     i = 0
     for file in tqdm.tqdm(os.listdir(IMG_PATH)):
         i+=1

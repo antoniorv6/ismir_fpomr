@@ -188,7 +188,7 @@ def main():
 
     for i in range(len(XTrain)):
         img = (255. - XTrain[i]) / 255.
-        img = XTrain[i]
+        #img = XTrain[i]
         width = int(np.ceil(img.shape[1] * ratio))
         height = int(np.ceil(img.shape[0] * ratio))
         XTrain[i] = cv2.resize(img, (width, height))
