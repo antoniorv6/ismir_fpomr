@@ -13,11 +13,14 @@ import cv2
 from utils import writeResults
 import os
 
-def test_model(model, X, Y, i2w, device, write_results, corpus):
+def test_model(model, X, Y, i2w, device):
     acc_ed_dist = 0
     acc_len = 0
 
     randomindex = random.randint(0, len(X)-1)
+
+    preds = []
+    gts = []
 
     with torch.no_grad():
       for i in range(len(X)):
@@ -39,19 +42,19 @@ def test_model(model, X, Y, i2w, device, write_results, corpus):
 
           groundtruth = [i2w[label] for label in Y[i]]
 
+          preds.append(decoded)
+          gts.append(groundtruth)
+
           if(i == randomindex):
               print(f"Prediction - {decoded}")
               print(f"True - {groundtruth}")
-
-          if write_results:
-              writeResults(corpus, i, decoded, groundtruth)
 
           acc_ed_dist += levenshtein(decoded, groundtruth)
           acc_len += len(groundtruth)
 
     ser = 100.*acc_ed_dist / acc_len
     
-    return ser
+    return ser, preds, gts
 
 def data_preparation_CTC(X, Y):
     max_image_width = max([img.shape[1] for img in X])
@@ -261,9 +264,9 @@ def main():
             print(f"Step {mini_epoch + 1} - Loss: {avg}")
             
         model.eval()
-        SER_TRAIN = test_model(model, XTrain, YTrain, i2w, device, False, args.corpus_name)
-        SER_VAL = test_model(model, XVal, YVal, i2w, device, False, args.corpus_name)
-        SER_TEST = test_model(model, XTest, YTest, i2w, device, True, args.corpus_name)
+        SER_TRAIN, _, _ = test_model(model, XTrain, YTrain, i2w, device)
+        SER_VAL, _, _ = test_model(model, XVal, YVal, i2w, device)
+        SER_TEST, preds, gts = test_model(model, XTest, YTest, i2w, device)
 
         if SER_VAL < bestSer:
             print("Validation SER improved - Saving weights")
@@ -271,6 +274,8 @@ def main():
             torch.save(optimizer.state_dict(), f"models/optimizers/{args.model_name}_{args.corpus_name}.pt")
             bestSer = SER_VAL
             bestTest = SER_TEST
+            for i, pred in enumerate(preds):
+                writeResults(args.corpus_name, i, pred, gts[i])
 
         print(f"EPOCH {epoch + 1} --- TRAIN SER {SER_TRAIN} | VAL SER {SER_VAL} | TEST SER {SER_TEST}")
         print(f"BEST TEST - {bestTest}")
