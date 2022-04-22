@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python train_span_torch.py --data_path Data/FP-Primus --model_name SPAN --corpus_name FP-Primus --batch_size 1
+python train_span.py --data_path Data/SEILS --model_name SPAN --corpus_name SEILS --batch_size 1

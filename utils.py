@@ -19,6 +19,7 @@ def parse_arguments():
     parser.add_argument('--data_path', type=str, default=None, help="Image folder to load")
     parser.add_argument('--encoder_weights', type=str, default=None, help="Image folder to load")
     parser.add_argument('--batch_size', type=int, default=None, help="Batch size")
+    parser.add_argument('--patience', type=int, default=10, help="Training patience")
 
 
     args = parser.parse_args()

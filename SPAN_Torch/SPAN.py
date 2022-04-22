@@ -1,4 +1,5 @@
 from json import decoder
+from unicodedata import bidirectional
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -162,6 +163,23 @@ class PageDecoder(nn.Module):
     def forward(self, inputs):
         x = self.dec_conv(inputs)
         return F.log_softmax(x, dim=1)
+
+class RecurrentPageDecoder(nn.Module):
+
+    def __init__(self, out_cats):
+        super(RecurrentPageDecoder, self).__init__()
+        self.dec_conv = nn.Conv2d(in_channels= 512, out_channels=out_cats, kernel_size=(5,5), padding=(2,2))
+        self.dec_lstm = nn.LSTM(input_size=out_cats, hidden_size=256, bidirectional=True, batch_first=True)
+        self.out_dense = nn.Linear(in_features=512, out_features=out_cats)
+    
+    def forward(self, inputs):
+        x = self.dec_conv(inputs)
+        b, c, h, w = x.size()
+        x = x.reshape(b, c, h*w)
+        x = x.permute(0,2,1)
+        x, _ = self.dec_lstm(x)
+        x = self.out_dense(x)
+        return F.log_softmax(x, dim=2)
     
 
 class LineDecoder(nn.Module):
@@ -190,6 +208,23 @@ class SPANPage(nn.Module):
             self.encoder.load_state_dict(torch.load(pretrain_path), strict=True)
 
         self.decoder = PageDecoder(out_cats=out_cats)
+    
+    def forward(self, inputs):
+        x = self.encoder(inputs)
+        x = self.decoder(x)
+        return x
+
+class SPANPageRecurrent(nn.Module):
+
+    def __init__(self, in_channels, out_cats, pretrain_path=None):
+        super(SPANPageRecurrent, self).__init__()
+        self.encoder = Encoder(in_channels=in_channels)
+
+        if pretrain_path != None:
+            print(f"Loading weights from {pretrain_path}")
+            self.encoder.load_state_dict(torch.load(pretrain_path), strict=True)
+
+        self.decoder = RecurrentPageDecoder(out_cats=out_cats)
     
     def forward(self, inputs):
         x = self.encoder(inputs)
@@ -230,6 +265,13 @@ def SPAN_Weight_Init(m):
 def get_span_model(maxwidth, maxheight, in_channels, out_size, encoder_weights):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SPANPage(in_channels=in_channels, out_cats=out_size+1, pretrain_path=encoder_weights).to(device)
+    summary(model, input_size=[(1,in_channels,maxheight,maxwidth)], dtypes=[torch.float])
+    
+    return model, device
+
+def get_span_recurrent_model(maxwidth, maxheight, in_channels, out_size, encoder_weights):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = SPANPageRecurrent(in_channels=in_channels, out_cats=out_size+1, pretrain_path=encoder_weights).to(device)
     summary(model, input_size=[(1,in_channels,maxheight,maxwidth)], dtypes=[torch.float])
     
     return model, device
