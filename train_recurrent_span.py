@@ -163,8 +163,8 @@ def main():
     ratio = 1
 
     for i in range(len(XTrain)):
-        #img = (255. - XTrain[i]) / 255.
-        img = XTrain[i]
+        img = (255. - XTrain[i]) / 255.
+        #img = XTrain[i]
         width = int(np.ceil(img.shape[1] * ratio))
         height = int(np.ceil(img.shape[0] * ratio))
         XTrain[i] = cv2.resize(img, (width, height))
@@ -226,8 +226,8 @@ def main():
 
     numsamples = len(XTrain)//args.batch_size
 
-    bestSer = 10000
-    bestTest = 10000
+    bestSer = np.Inf
+    bestTest = np.Inf
     patience = args.patience
 
     if not os.path.isdir(f"test_predictions/{args.corpus_name}/"):
@@ -271,7 +271,7 @@ def main():
             patience = args.patience
             for i, pred in enumerate(preds):
                 writeResults(args.corpus_name, i, pred, gts[i])
-        elif epoch > 30:
+        elif epoch > args.warmup:
             patience -= 1
             if patience == 0:
                 print(f"Training finished with best SER in test of {bestTest}")
