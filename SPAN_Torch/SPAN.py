@@ -186,7 +186,7 @@ class TransformerPageDecoder(nn.Module):
     def __init__(self, out_cats):
         super(TransformerPageDecoder, self).__init__()
         self.dec_conv = nn.Conv2d(in_channels= 512, out_channels=out_cats, kernel_size=(5,5), padding=(2,2))
-        transf_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8, dim_feedforward=1024)
+        transf_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8, dim_feedforward=1024, batch_first=True)
         self.dec_transf = nn.TransformerEncoder(transf_layer, num_layers=1)
         self.out_dense = nn.Linear(in_features=512, out_features=out_cats)
     
