@@ -163,8 +163,8 @@ def main():
     ratio = 1
 
     for i in range(len(XTrain)):
-        img = (255. - XTrain[i]) / 255.
-        #img = XTrain[i]
+        #img = (255. - XTrain[i]) / 255.
+        img = XTrain[i]
         width = int(np.ceil(img.shape[1] * ratio))
         height = int(np.ceil(img.shape[0] * ratio))
         XTrain[i] = cv2.resize(img, (width, height))
@@ -218,7 +218,7 @@ def main():
     print(f"Using {device} device")
     
     batch_gen = None
-    if args.model_name == "SPAN_AUG":
+    if args.model_name == "SPAN_AUG" or args.model_name == "SPAN_TRANSFORMER_AUG":
         print("Using basic data augmentation generation")
         batch_gen = batch_generator_aug(XTrain, YTrain, args.batch_size)
     else:
