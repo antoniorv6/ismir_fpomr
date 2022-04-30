@@ -252,7 +252,7 @@ class SPANPageRecurrent(nn.Module):
 class SPANPageTransformer(nn.Module):
 
     def __init__(self, in_channels, out_cats, pretrain_path=None):
-        super(SPANPageRecurrent, self).__init__()
+        super(SPANPageTransformer, self).__init__()
         self.encoder = Encoder(in_channels=in_channels)
 
         if pretrain_path != None:
