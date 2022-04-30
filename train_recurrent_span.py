@@ -1,7 +1,7 @@
 from base64 import decode
 from augmentations import Brightness, Contrast, DPIAdjusting, Dilation, Erosion, Perspective
 from utils import parse_arguments, check_and_retrieveVocabulary
-from SPAN_Torch.SPAN import get_span_recurrent_model
+from SPAN_Torch.SPAN import get_span_recurrent_model, get_span_transformer_model
 import torch
 from data_load import load_data_jsonMuret, load_data_testcase
 import numpy as np
@@ -201,11 +201,19 @@ def main():
 
     print(maxwidth)
     print(maxheight)
-    model, device = get_span_recurrent_model(maxwidth=maxwidth, 
-                                    maxheight=maxheight, 
-                                    in_channels=1, 
-                                    out_size=len(w2i), 
-                                    encoder_weights=args.encoder_weights)
+    
+    if args.model_name == "SPAN_TRANSFORMER":
+        model, device = get_span_recurrent_model(maxwidth=maxwidth, 
+                                        maxheight=maxheight, 
+                                        in_channels=1, 
+                                        out_size=len(w2i), 
+                                        encoder_weights=args.encoder_weights)
+    else:
+        model, device = get_span_recurrent_model(maxwidth=maxwidth, 
+                                        maxheight=maxheight, 
+                                        in_channels=1, 
+                                        out_size=len(w2i), 
+                                        encoder_weights=args.encoder_weights)
 
     print(f"Using {device} device")
     

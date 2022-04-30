@@ -195,7 +195,7 @@ class TransformerPageDecoder(nn.Module):
         b, c, h, w = x.size()
         x = x.reshape(b, c, h*w)
         x = x.permute(0,2,1)
-        x, _ = self.dec_lstm(x)
+        x = self.dec_transf(x)
         x = self.out_dense(x)
         return F.log_softmax(x, dim=2)
     
