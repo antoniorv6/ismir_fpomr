@@ -202,7 +202,7 @@ def main():
     print(maxwidth)
     print(maxheight)
     
-    if args.model_name == "SPAN_TRANSFORMER":
+    if args.model_name == "SPAN_TRANSFORMER" or args.model_name == "SPAN_TRANSFORMER_AUG":
         model, device = get_span_transformer_model(maxwidth=maxwidth, 
                                         maxheight=maxheight, 
                                         in_channels=1, 
