@@ -203,7 +203,7 @@ def main():
     print(maxheight)
     
     if args.model_name == "SPAN_TRANSFORMER":
-        model, device = get_span_recurrent_model(maxwidth=maxwidth, 
+        model, device = get_span_transformer_model(maxwidth=maxwidth, 
                                         maxheight=maxheight, 
                                         in_channels=1, 
                                         out_size=len(w2i), 
