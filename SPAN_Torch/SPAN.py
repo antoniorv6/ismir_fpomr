@@ -183,22 +183,23 @@ class RecurrentPageDecoder(nn.Module):
 
 class TransformerPageDecoder(nn.Module):
 
-    def __init__(self, out_cats):
+     def __init__(self, out_cats):
         super(TransformerPageDecoder, self).__init__()
         self.dec_conv = nn.Conv2d(in_channels= 512, out_channels=out_cats, kernel_size=(5,5), padding=(2,2))
+        self.projection = nn.Linear(in_features=out_cats, out_features=512)
         transf_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8, dim_feedforward=1024, batch_first=True)
         self.dec_transf = nn.TransformerEncoder(transf_layer, num_layers=1)
         self.out_dense = nn.Linear(in_features=512, out_features=out_cats)
-    
+
     def forward(self, inputs):
         x = self.dec_conv(inputs)
         b, c, h, w = x.size()
         x = x.reshape(b, c, h*w)
         x = x.permute(0,2,1)
+        x = self.projection(x)
         x = self.dec_transf(x)
         x = self.out_dense(x)
         return F.log_softmax(x, dim=2)
-    
 
 class LineDecoder(nn.Module):
 
