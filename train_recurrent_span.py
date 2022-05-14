@@ -13,6 +13,99 @@ import cv2
 from utils import writeResults
 import os
 
+# Utility function for obtaining the best split-seq path
+def forced_split_decoder(y_pred, i2w):
+    """Decodes (CTC forced split-sequence decoder + i2w conversion) the output of the CRNN-CTC model.
+    Arguments:
+    - y_pred    tensor (samples, time_steps, num_categories) containing the prediction
+    - i2w       dictionary for the int-to-word conversion."""
+    y_pred = y_pred.cpu().detach().numpy()
+
+    dec_pred = []
+    # Iterate over each batch item in y_pred
+    for id, sample in enumerate(y_pred):
+        dec_sample = []
+        prev_blank = False
+        prev_sym = None
+        prev_type = 1  # To force the first decoded symbol (that is not a blank label) to be of shape type
+        # Iterate over each time step in each batch item
+        for ts in sample:
+            ts_asc = np.argsort(ts)
+            for cat in reversed(ts_asc):
+                # Get decoded symbol for current time step
+                csym = i2w[int(cat)] if int(cat) != len(i2w) else 'blank'
+                # Get symbol type (shape or pitch); shape = 0, pitch = 1
+                if csym[0] == 'S' or csym[0] == 'L':
+                    ctype = 1
+                else:
+                    ctype = 0
+                # Append symbol
+                if csym == 'blank':
+                    dec_sample.append(csym)
+                    prev_sym, prev_type = prev_sym, prev_type
+                    prev_blank = True
+                    break
+                elif csym == prev_sym and ctype == prev_type and not prev_blank:
+                    dec_sample.append(csym)
+                    prev_sym, prev_type = csym, ctype
+                    prev_blank = False
+                    break
+                elif csym != prev_sym and ctype != prev_type:
+                    dec_sample.append(csym)
+                    prev_sym, prev_type = csym, ctype
+                    prev_blank = False
+                    break
+        # Merge repeated symbols
+        dec_sample = [k for k, g in groupby(dec_sample)]
+        # Delete blank labels
+        dec_sample = [sym for sym in dec_sample if sym != 'blank']
+        # Append sequence
+        dec_pred.append(dec_sample)
+
+    return dec_pred
+
+
+def test_sseq(model, X, Y, i2w, device):
+    acc_ed_dist = 0
+    acc_len = 0
+
+    randomindex = random.randint(0, len(X)-1)
+
+    preds = []
+    gts = []
+
+    with torch.no_grad():
+      for i in range(len(X)):
+          pred = model(torch.Tensor(np.expand_dims(np.expand_dims(X[i],axis=0),axis=0)).to(device))  
+          pred = pred[0]
+          #out_best = torch.argmax(pred,dim=1)
+
+          # Greedy decoding (TODO Cambiar por la funcion analoga del backend de keras)
+          #out_best = [k for k, g in groupby(list(out_best))]
+          #decoded = []
+          #for c in out_best:
+          #    if c < len(i2w):  # CTC Blank must be ignored
+          #        decoded.append(i2w[c.item()])
+
+          decoded = forced_split_decoder(pred, i2w)
+
+          groundtruth = [i2w[label] for label in Y[i]]
+
+          preds.append(decoded)
+          gts.append(groundtruth)
+
+          if(i == randomindex):
+              print(f"Prediction - {decoded}")
+              print(f"True - {groundtruth}")
+
+          acc_ed_dist += levenshtein(decoded, groundtruth)
+          acc_len += len(groundtruth)
+
+    ser = 100.*acc_ed_dist / acc_len
+    
+    return ser, preds, gts
+
+
 def test_model(model, X, Y, i2w, device):
     acc_ed_dist = 0
     acc_len = 0
@@ -149,14 +242,14 @@ def main():
     else:
         print("Loading MuRet train set:")
         if args.model_name == "SPAN_SYNTH":
-            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train_daug")
+            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train_daug", encoding=args.encoding)
         else:
-            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train")
+            XTrain, YTrain = load_data_jsonMuret(PATH=f"{args.data_path}/train", encoding=args.encoding)
 
         print("Loading MuRet val set:")
-        XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val")
+        XVal, YVal = load_data_jsonMuret(PATH=f"{args.data_path}/val", encoding=args.encoding)
         print("Loading MuRet test set:")
-        XTest, YTest = load_data_jsonMuret(PATH=f"{args.data_path}/test")
+        XTest, YTest = load_data_jsonMuret(PATH=f"{args.data_path}/test", encoding=args.encoding)
 
     w2i, i2w = check_and_retrieveVocabulary([YTrain, YVal, YTest], f"./vocab", f"{args.corpus_name}_{args.encoding}")
     
@@ -266,9 +359,15 @@ def main():
             print(f"Step {mini_epoch + 1} - Loss: {avg}")
             
         model.eval()
-        SER_TRAIN, _, _ = test_model(model, XTrain, YTrain, i2w, device)
-        SER_VAL, _, _ = test_model(model, XVal, YVal, i2w, device)
-        SER_TEST, preds, gts = test_model(model, XTest, YTest, i2w, device)
+        if args.encoding == "sseq":
+            SER_TRAIN, _, _ = test_sseq(model, XTrain, YTrain, i2w, device)
+            SER_VAL, _, _ = test_sseq(model, XVal, YVal, i2w, device)
+            SER_TEST, preds, gts = test_sseq(model, XTest, YTest, i2w, device)
+        else:
+            SER_TRAIN, _, _ = test_model(model, XTrain, YTrain, i2w, device)
+            SER_VAL, _, _ = test_model(model, XVal, YVal, i2w, device)
+            SER_TEST, preds, gts = test_model(model, XTest, YTest, i2w, device)
+
 
         if SER_VAL < bestSer:
             print("Validation SER improved - Saving weights")
