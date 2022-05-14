@@ -20,6 +20,7 @@ def forced_split_decoder(y_pred, i2w):
     - y_pred    tensor (samples, time_steps, num_categories) containing the prediction
     - i2w       dictionary for the int-to-word conversion."""
     y_pred = y_pred.cpu().detach().numpy()
+    y_pred = [y_pred]
 
     dec_pred = []
     # Iterate over each batch item in y_pred
