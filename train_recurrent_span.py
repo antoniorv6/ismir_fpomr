@@ -61,7 +61,7 @@ def forced_split_decoder(y_pred, i2w):
         # Delete blank labels
         dec_sample = [sym for sym in dec_sample if sym != 'blank']
         # Append sequence
-        dec_pred.append(dec_sample)
+        dec_pred = dec_sample
 
     return dec_pred
 
