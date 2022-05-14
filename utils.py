@@ -21,6 +21,8 @@ def parse_arguments():
     parser.add_argument('--batch_size', type=int, default=None, help="Batch size")
     parser.add_argument('--patience', type=int, default=10, help="Training patience")
     parser.add_argument('--warmup', type=int, default=50, help="Training patience")
+    parser.add_argument('--encoding', type=str, default=None, help="Encoding")
+
 
 
 

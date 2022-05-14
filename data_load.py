@@ -23,7 +23,7 @@ def load_data_testcase(PATH):
     return X, Y
 
 
-def load_data_jsonMuret(PATH):
+def load_data_jsonMuret(PATH, encoding):
     X = []
     Y = []
     for file in tqdm(os.listdir(f"{PATH}")):
@@ -39,7 +39,11 @@ def load_data_jsonMuret(PATH):
                     if region["type"] == "staff":
                         if "symbols" in region: # Avoid empty staves
                             for symbol in region["symbols"]:
-                                sequence.append(f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}")
+                                if encoding == "sseq":
+                                    sequence.append(f"{symbol['agnostic_symbol_type']}")
+                                    sequence.append(f"{symbol['position_in_staff']}")
+                                else:
+                                    sequence.append(f"{symbol['agnostic_symbol_type']}:{symbol['position_in_staff']}")
                 if sequence:
                     X.append(image)
                     Y.append(sequence)
