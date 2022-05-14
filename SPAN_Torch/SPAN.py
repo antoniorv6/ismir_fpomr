@@ -308,6 +308,7 @@ def get_span_model(maxwidth, maxheight, in_channels, out_size, encoder_weights):
 def get_span_recurrent_model(maxwidth, maxheight, in_channels, out_size, encoder_weights):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SPANPageRecurrent(in_channels=in_channels, out_cats=out_size+1, pretrain_path=encoder_weights).to(device)
+    model.apply(SPAN_Weight_Init)
     summary(model, input_size=[(1,in_channels,maxheight,maxwidth)], dtypes=[torch.float])
     
     return model, device
