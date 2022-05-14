@@ -78,7 +78,7 @@ def test_sseq(model, X, Y, i2w, device):
       for i in range(len(X)):
           pred = model(torch.Tensor(np.expand_dims(np.expand_dims(X[i],axis=0),axis=0)).to(device))  
           pred = pred[0]
-          #out_best = torch.argmax(pred,dim=1)
+          out_best = torch.argmax(pred,dim=1)
 
           # Greedy decoding (TODO Cambiar por la funcion analoga del backend de keras)
           #out_best = [k for k, g in groupby(list(out_best))]
@@ -87,7 +87,7 @@ def test_sseq(model, X, Y, i2w, device):
           #    if c < len(i2w):  # CTC Blank must be ignored
           #        decoded.append(i2w[c.item()])
 
-          decoded = forced_split_decoder(pred, i2w)
+          decoded = forced_split_decoder(out_best, i2w)
 
           groundtruth = [i2w[label] for label in Y[i]]
 
